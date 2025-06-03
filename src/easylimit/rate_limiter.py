@@ -9,7 +9,7 @@ import threading
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 
 @dataclass
@@ -67,10 +67,10 @@ class RateLimiter:
         self._track_calls = track_calls
         self._history_window = history_window_seconds
         self._call_count = 0
-        self._timestamps = []
-        self._delays = []
+        self._timestamps: List[float] = []
+        self._delays: List[float] = []
         self._start_time = datetime.now() if track_calls else None
-        self._last_call_time = None
+        self._last_call_time: Optional[datetime] = None
         self.lock = threading.RLock()
 
     def _refill_tokens(self) -> None:
