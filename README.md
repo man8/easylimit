@@ -415,7 +415,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### 0.1.0 (2025-06-03)
+### 0.2.0 (2025-06-03)
 
 - Initial release
 - Token bucket rate limiting algorithm
