@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "easylimit"
-version = "0.1.0"
+version = "0.2.0"
 description = "A simple, precise Python rate limiter with built-in context manager support for hassle-free API throttling"
 readme = "README.md"
 license = "MIT"
