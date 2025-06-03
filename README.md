@@ -421,7 +421,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Token bucket rate limiting algorithm
 - Context manager support
 - Thread-safe implementation
-- **Call tracking capabilities** (MAN8-4758)
+- **Call tracking capabilities**
   - Optional call counting and statistics
   - Time-windowed call history tracking
   - Efficiency metrics and delay analysis
