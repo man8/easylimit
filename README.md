@@ -151,8 +151,6 @@ print(f"Overall calls per second: {stats.calls_per_second_average:.2f}")
 limiter.reset_call_count()
 ```
 
-### Eliminating Manual API Call Estimation
-
 ```python
 from easylimit import RateLimiter
 
