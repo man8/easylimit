@@ -5,7 +5,7 @@ This package provides a token bucket rate limiter that can be used to limit
 the rate of operations (e.g., API calls) to a specified number per second.
 """
 
-from .rate_limiter import RateLimiter
+from .rate_limiter import CallStats, RateLimiter
 
 __version__ = "0.1.0"
-__all__ = ["RateLimiter"]
+__all__ = ["RateLimiter", "CallStats"]
