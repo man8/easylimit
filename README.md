@@ -186,31 +186,7 @@ print(f"Overall calls per second: {stats.calls_per_second_average:.2f}")
 limiter.reset_call_count()
 ```
 
-```python
-from easylimit import RateLimiter
 
-# Before: Manual estimation (error-prone)
-def process_users_old_way(users):
-    total_api_calls = 0
-    for user in users:
-        if user.get("mfa_status") == "ENABLED":
-            total_api_calls += (2 if user.get("email") else 3)
-        elif user.get("mfa_status") in ["ALREADY_ENABLED", "DATA_MISMATCH"]:
-            total_api_calls += 1
-    
-    print(f"Estimated API calls: {total_api_calls}")
-
-# After: Automatic tracking (accurate)
-def process_users_with_tracking(users):
-    limiter = RateLimiter(max_calls_per_second=2.0, track_calls=True)
-    
-    for user in users:
-        with limiter:
-            process_user_mfa(user)  # Actual API calls
-    
-    print(f"Actual API calls made: {limiter.call_count}")
-    print(f"Efficiency: {limiter.get_efficiency():.1f}%")
-```
 
 ## API Reference
 
@@ -219,19 +195,19 @@ def process_users_with_tracking(users):
 ```python
 class RateLimiter:
     def __init__(
-        self, 
+        self,
         max_calls_per_second: float = 1.0,
         track_calls: bool = False,
         history_window_seconds: int = 3600
     ) -> None:
         """
         Initialise the rate limiter.
-        
+
         Args:
             max_calls_per_second: Maximum number of calls allowed per second
             track_calls: Enable call tracking (default: False)
             history_window_seconds: How long to keep call history for windowed queries
-            
+
         Raises:
             ValueError: If max_calls_per_second is not positive
         """
@@ -251,60 +227,60 @@ class RateLimiter:
 #### Methods
 
 - **`acquire(timeout: Optional[float] = None) -> bool`**
-  
+
   Acquire a token, blocking if necessary.
-  
+
   - `timeout`: Maximum time to wait for a token (None for no timeout)
   - Returns: `True` if token was acquired, `False` if timeout occurred
 
 - **`try_acquire() -> bool`**
-  
+
   Try to acquire a token without blocking.
-  
+
   - Returns: `True` if token was acquired, `False` otherwise
 
 - **`available_tokens() -> float`**
-  
+
   Get the current number of available tokens.
-  
+
   - Returns: Number of tokens currently available
 
 #### Call Tracking Properties (when `track_calls=True`)
 
 - **`call_count -> int`**
-  
+
   Total number of calls made through this rate limiter.
-  
+
   - Returns: Total call count
   - Raises: `ValueError` if call tracking is not enabled
 
 - **`stats -> CallStats`**
-  
+
   Detailed statistics about calls and timing.
-  
+
   - Returns: `CallStats` object with comprehensive metrics
   - Raises: `ValueError` if call tracking is not enabled
 
 #### Call Tracking Methods (when `track_calls=True`)
 
 - **`reset_call_count() -> None`**
-  
+
   Reset the call counter and all tracking data to zero.
-  
+
   - Raises: `ValueError` if call tracking is not enabled
 
 - **`calls_in_window(window_seconds: int) -> int`**
-  
+
   Return number of calls made in the last N seconds.
-  
+
   - `window_seconds`: Time window in seconds (must be positive)
   - Returns: Number of calls in the specified window
   - Raises: `ValueError` if call tracking is not enabled or window_seconds is not positive
 
 - **`get_efficiency(window_seconds: int = 60) -> float`**
-  
+
   Calculate rate limit efficiency as percentage (0.0 to 100.0).
-  
+
   - `window_seconds`: Time window for efficiency calculation (default: 60)
   - Returns: Efficiency percentage (0.0 = no calls, 100.0 = maximum rate utilisation)
   - Raises: `ValueError` if call tracking is not enabled or window_seconds is not positive
