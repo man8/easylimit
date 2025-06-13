@@ -38,6 +38,11 @@ with limiter:
 if limiter.try_acquire():
     make_api_call()
 
+# Create an unlimited rate limiter (no throttling)
+unlimited_limiter = RateLimiter.unlimited()
+with unlimited_limiter:
+    make_api_call()  # No rate limiting applied
+
 # Enable call tracking for monitoring
 tracked_limiter = RateLimiter(max_calls_per_second=2, track_calls=True)
 with tracked_limiter:
@@ -117,6 +122,36 @@ if limiter.acquire(timeout=5.0):
     make_api_call()
 else:
     print("Timeout reached, no token available")
+```
+
+### Unlimited Rate Limiting
+
+For scenarios where rate limiting is optional or needs to be disabled:
+
+```python
+from easylimit import RateLimiter
+
+# Create an unlimited rate limiter (optimal performance)
+unlimited_limiter = RateLimiter.unlimited()
+
+# Use the same API - no rate limiting occurs
+with unlimited_limiter:
+    make_api_call()
+
+# Enable call tracking when needed
+tracked_unlimited = RateLimiter.unlimited(track_calls=True)
+with tracked_unlimited:
+    make_api_call()
+
+print(f"Calls made: {tracked_unlimited.call_count}")
+
+# Conditional rate limiting pattern
+def process_data(throttle=True):
+    limiter = RateLimiter(max_calls_per_second=2) if throttle else RateLimiter.unlimited()
+    
+    with limiter:
+        # Code works the same regardless of throttling
+        make_api_call()
 ```
 
 ### Call Tracking and Monitoring
@@ -201,6 +236,17 @@ class RateLimiter:
             ValueError: If max_calls_per_second is not positive
         """
 ```
+
+#### Static Methods
+
+- **`unlimited(track_calls: bool = False) -> RateLimiter`**
+  
+  Create an unlimited rate limiter that performs no rate limiting.
+  
+  - `track_calls`: Enable call tracking (default: False for optimal performance)
+  - Returns: RateLimiter instance configured for unlimited calls
+  
+  This method returns a RateLimiter instance that maintains the same API surface whilst allowing unlimited calls per second. Ideal for conditional rate limiting scenarios.
 
 #### Methods
 
@@ -426,5 +472,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   - Time-windowed call history tracking
   - Efficiency metrics and delay analysis
   - Thread-safe tracking with bounded memory usage
-- Comprehensive test suite with 37 tests
+- **Unlimited rate limiting**
+  - `RateLimiter.unlimited()` static method for non-limiting instances
+  - Maintains full API compatibility for conditional rate limiting
+  - Optional call tracking with performance-optimised defaults
+- Comprehensive test suite with 26 tests
 - Zero runtime dependencies
