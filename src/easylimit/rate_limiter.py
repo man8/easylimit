@@ -247,6 +247,34 @@ class RateLimiter:
             max_possible_calls = self.max_calls_per_second * window_seconds
             return (calls_in_period / max_possible_calls) * 100.0 if max_possible_calls > 0 else 0.0
 
+    @staticmethod
+    def unlimited(track_calls: bool = False) -> "RateLimiter":
+        """
+        Create an unlimited rate limiter that performs no rate limiting.
+
+        This method returns a RateLimiter instance configured to allow unlimited
+        calls per second whilst maintaining the same API surface as a regular
+        RateLimiter, including context manager support and optional statistics tracking.
+
+        Args:
+            track_calls: Enable call tracking (default: False for optimal performance)
+
+        Returns:
+            RateLimiter: An unlimited rate limiter instance
+
+        Example:
+            >>> unlimited_limiter = RateLimiter.unlimited()
+            >>> with unlimited_limiter:
+            ...     # This call will not be rate limited
+            ...     make_api_call()
+
+            >>> tracked_limiter = RateLimiter.unlimited(track_calls=True)
+            >>> with tracked_limiter:
+            ...     make_api_call()
+            >>> print(f"Calls made: {tracked_limiter.call_count}")
+        """
+        return RateLimiter(max_calls_per_second=float("inf"), track_calls=track_calls)
+
     def __repr__(self) -> str:
         """Return string representation of the rate limiter."""
         return f"RateLimiter(max_calls_per_second={self.max_calls_per_second})"

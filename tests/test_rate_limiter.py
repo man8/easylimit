@@ -273,3 +273,106 @@ class TestRateLimiterEdgeCases:
         total_time = time.time() - start_time
 
         assert 1.0 <= total_time <= 1.8
+
+
+class TestRateLimiterUnlimited:
+    """Test unlimited rate limiter functionality."""
+
+    def test_unlimited_creation(self) -> None:
+        """Test that unlimited() creates a proper RateLimiter instance."""
+        limiter = RateLimiter.unlimited()
+        assert isinstance(limiter, RateLimiter)
+        assert limiter.max_calls_per_second == float("inf")
+        assert limiter._track_calls is False
+
+    def test_unlimited_no_rate_limiting(self) -> None:
+        """Test that unlimited limiter performs no rate limiting."""
+        limiter = RateLimiter.unlimited()
+
+        start_time = time.time()
+
+        for _ in range(100):
+            with limiter:
+                pass
+
+        elapsed = time.time() - start_time
+        assert elapsed < 0.5
+
+    def test_unlimited_context_manager(self) -> None:
+        """Test unlimited limiter as context manager."""
+        limiter = RateLimiter.unlimited()
+
+        with limiter:
+            pass
+
+        for _ in range(10):
+            with limiter:
+                pass
+
+    def test_unlimited_acquire_methods(self) -> None:
+        """Test unlimited limiter acquire methods."""
+        limiter = RateLimiter.unlimited()
+
+        assert limiter.try_acquire() is True
+        assert limiter.try_acquire() is True
+        assert limiter.acquire() is True
+        assert limiter.acquire(timeout=0.1) is True
+
+    def test_unlimited_call_tracking(self) -> None:
+        """Test that unlimited limiter maintains call tracking when enabled."""
+        limiter = RateLimiter.unlimited(track_calls=True)
+
+        for _ in range(5):
+            with limiter:
+                pass
+
+        assert limiter.call_count == 5
+        stats = limiter.stats
+        assert stats.total_calls == 5
+        assert stats.average_delay_seconds >= 0
+
+        limiter.reset_call_count()
+        assert limiter.call_count == 0
+
+    def test_unlimited_windowed_queries(self) -> None:
+        """Test windowed query methods work with unlimited limiter when tracking enabled."""
+        limiter = RateLimiter.unlimited(track_calls=True)
+
+        for _ in range(3):
+            with limiter:
+                pass
+
+        assert limiter.calls_in_window(60) == 3
+        efficiency = limiter.get_efficiency(60)
+        assert efficiency >= 0
+
+    def test_unlimited_thread_safety(self) -> None:
+        """Test unlimited limiter is thread-safe with tracking enabled."""
+        limiter = RateLimiter.unlimited(track_calls=True)
+        results = []
+
+        def worker() -> None:
+            for _ in range(10):
+                with limiter:
+                    results.append(1)
+
+        threads = [threading.Thread(target=worker) for _ in range(3)]
+
+        for thread in threads:
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
+        assert len(results) == 30
+        assert limiter.call_count == 30
+
+    def test_unlimited_available_tokens(self) -> None:
+        """Test unlimited limiter always has maximum tokens available."""
+        limiter = RateLimiter.unlimited()
+
+        assert limiter.available_tokens() == float("inf")
+
+        limiter.acquire()
+        limiter.acquire()
+        assert limiter.available_tokens() == float("inf")
