@@ -435,11 +435,27 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## Migration from GitHub Installation
+
+If you're currently using easylimit installed directly from GitHub, you can migrate to the PyPI version:
+
+**Before (GitHub installation):**
+```bash
+pip install git+https://github.com/man8/easylimit.git
+```
+
+**After (PyPI installation):**
+```bash
+pip install easylimit
+```
+
+The API remains exactly the same, so no code changes are required. Simply update your `requirements.txt` or dependency management files to use `easylimit` instead of the GitHub URL.
+
 ## Changelog
 
 ### 0.2.0 (2025-06-03)
 
-- Initial release
+- Initial PyPI release
 - Token bucket rate limiting algorithm
 - Context manager support
 - Thread-safe implementation
