@@ -262,7 +262,7 @@ class TestBackwardCompatibility:
         with limiter:
             pass
 
-        assert repr(limiter) == "RateLimiter(max_calls_per_second=2.0)"
+        assert repr(limiter) == "RateLimiter(max_calls_per_second=2.0, bucket_size=2.0)"
 
     def test_context_manager_unchanged(self) -> None:
         """Test that context manager behaviour is unchanged when tracking disabled."""

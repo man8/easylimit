@@ -8,7 +8,7 @@ the rate of operations (e.g., API calls) to a specified number per second.
 import threading
 import time
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 
@@ -44,24 +44,48 @@ class RateLimiter:
     """
 
     def __init__(
-        self, max_calls_per_second: float = 1.0, track_calls: bool = False, history_window_seconds: int = 3600
+        self,
+        max_calls_per_second: Optional[float] = None,
+        rate_limit_calls: Optional[int] = None,
+        rate_limit_period: Optional[timedelta] = None,
+        track_calls: bool = False,
+        history_window_seconds: int = 3600,
     ) -> None:
         """
         Initialise the rate limiter.
 
         Args:
-            max_calls_per_second: Maximum number of calls allowed per second
+            max_calls_per_second: Maximum number of calls allowed per second (legacy parameter)
+            rate_limit_calls: Number of calls allowed in the specified period
+            rate_limit_period: Time period for the rate limit (using timedelta)
             track_calls: Enable call tracking (default: False)
             history_window_seconds: How long to keep call history for windowed queries
 
         Raises:
-            ValueError: If max_calls_per_second is not positive
+            ValueError: If parameters are invalid or conflicting
         """
-        if max_calls_per_second <= 0:
-            raise ValueError("max_calls_per_second must be positive")
+        if max_calls_per_second is not None:
+            if rate_limit_calls is not None or rate_limit_period is not None:
+                raise ValueError("Cannot specify both max_calls_per_second and rate_limit_calls/rate_limit_period")
+            if max_calls_per_second <= 0:
+                raise ValueError("max_calls_per_second must be positive")
+            self.max_calls_per_second = max_calls_per_second
+            self.bucket_size = max_calls_per_second
+        elif rate_limit_calls is not None and rate_limit_period is not None:
+            if rate_limit_calls <= 0:
+                raise ValueError("rate_limit_calls must be positive")
+            if rate_limit_period.total_seconds() <= 0:
+                raise ValueError("rate_limit_period must be positive")
 
-        self.max_calls_per_second = max_calls_per_second
-        self.tokens = max_calls_per_second
+            self.max_calls_per_second = rate_limit_calls / rate_limit_period.total_seconds()
+            self.bucket_size = float(rate_limit_calls)
+        elif max_calls_per_second is None and rate_limit_calls is None and rate_limit_period is None:
+            self.max_calls_per_second = 1.0
+            self.bucket_size = 1.0
+        else:
+            raise ValueError("Must specify either max_calls_per_second or both rate_limit_calls and rate_limit_period")
+
+        self.tokens = self.bucket_size
         self.last_refill = time.time()
 
         self._track_calls = track_calls
@@ -79,7 +103,7 @@ class RateLimiter:
         elapsed = now - self.last_refill
         if elapsed > 0:
             tokens_to_add = elapsed * self.max_calls_per_second
-            self.tokens = min(self.max_calls_per_second, self.tokens + tokens_to_add)
+            self.tokens = min(self.bucket_size, self.tokens + tokens_to_add)
             self.last_refill = now
 
     def acquire(self, timeout: Optional[float] = None) -> bool:
@@ -107,8 +131,8 @@ class RateLimiter:
                     if elapsed >= timeout:
                         return False
 
-                time_to_wait = (1 - self.tokens) / self.max_calls_per_second
-                sleep_time = min(time_to_wait, 0.1)
+                time_to_next_token = 1.0 / self.max_calls_per_second
+                sleep_time = min(time_to_next_token, 0.1)
 
                 self.lock.release()
                 try:
@@ -277,4 +301,4 @@ class RateLimiter:
 
     def __repr__(self) -> str:
         """Return string representation of the rate limiter."""
-        return f"RateLimiter(max_calls_per_second={self.max_calls_per_second})"
+        return f"RateLimiter(max_calls_per_second={self.max_calls_per_second}, bucket_size={self.bucket_size})"

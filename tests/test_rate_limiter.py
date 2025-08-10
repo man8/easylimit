@@ -31,7 +31,7 @@ class TestRateLimiterBasic:
     def test_repr(self) -> None:
         """Test string representation."""
         limiter = RateLimiter(max_calls_per_second=2.5)
-        assert repr(limiter) == "RateLimiter(max_calls_per_second=2.5)"
+        assert repr(limiter) == "RateLimiter(max_calls_per_second=2.5, bucket_size=2.5)"
 
 
 class TestRateLimiterAcquisition:
