@@ -23,7 +23,7 @@ class TestDeprecationWarnings:
         """Test that using the new API does not trigger deprecation warnings."""
         with warnings.catch_warnings():
             warnings.simplefilter("error")
-            limiter = RateLimiter(rate_limit_calls=10, rate_limit_period=timedelta(seconds=5))
+            limiter = RateLimiter(limit=10, period=timedelta(seconds=5))
             assert limiter.max_calls_per_second == 2.0
 
     def test_default_constructor_no_deprecation_warning(self) -> None:
@@ -41,8 +41,8 @@ class TestDeprecationWarnings:
         assert len(warning_info) == 1
         warning_message = str(warning_info[0].message)
         assert "max_calls_per_second" in warning_message
-        assert "rate_limit_calls" in warning_message
-        assert "rate_limit_period" in warning_message
+        assert "limit" in warning_message
+        assert "period" in warning_message
         assert "deprecated" in warning_message
 
     def test_functionality_unchanged_with_deprecation(self) -> None:

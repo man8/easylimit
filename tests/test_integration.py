@@ -16,7 +16,7 @@ class TestRealWorldUsage:
 
     def test_api_call_simulation(self) -> None:
         """Test rate limiting with simulated API calls."""
-        limiter = RateLimiter(max_calls_per_second=2)
+        limiter = RateLimiter(limit=2)
 
         def mock_api_call(call_id: int) -> str:
             """Simulate an API call with some processing time."""
@@ -49,7 +49,7 @@ class TestRealWorldUsage:
         mock_response.json.return_value = {"status": "success"}
         mock_get.return_value = mock_response
 
-        limiter = RateLimiter(max_calls_per_second=2)
+        limiter = RateLimiter(limit=2)
 
         def make_api_request(endpoint: str) -> tuple[int, dict]:
             """Make a rate-limited API request."""
@@ -80,7 +80,7 @@ class TestRealWorldUsage:
 
     def test_burst_then_sustained_rate(self) -> None:
         """Test burst of calls followed by sustained rate."""
-        limiter = RateLimiter(max_calls_per_second=3)
+        limiter = RateLimiter(limit=3)
 
         call_times = []
         start_time = time.time()
@@ -99,7 +99,7 @@ class TestRealWorldUsage:
 
     def test_error_handling_with_rate_limiting(self) -> None:
         """Test that rate limiting works even when operations fail."""
-        limiter = RateLimiter(max_calls_per_second=2)
+        limiter = RateLimiter(limit=2)
 
         def failing_operation(should_fail: bool = False) -> str:
             if should_fail:
@@ -137,7 +137,7 @@ class TestPerformanceCharacteristics:
 
     def test_minimal_overhead(self) -> None:
         """Test that rate limiter has minimal overhead when tokens are available."""
-        limiter = RateLimiter(max_calls_per_second=1000)
+        limiter = RateLimiter(limit=1000)
 
         start_time = time.time()
         for _ in range(100):
@@ -149,7 +149,7 @@ class TestPerformanceCharacteristics:
 
     def test_memory_usage_stability(self) -> None:
         """Test that memory usage remains stable over time."""
-        limiter = RateLimiter(max_calls_per_second=10)
+        limiter = RateLimiter(limit=10)
 
         for _ in range(100):
             limiter.acquire()
@@ -160,7 +160,7 @@ class TestPerformanceCharacteristics:
 
     def test_precision_over_time(self) -> None:
         """Test that rate limiting precision is maintained over longer periods."""
-        limiter = RateLimiter(max_calls_per_second=5)
+        limiter = RateLimiter(limit=5)
 
         start_time = time.time()
         call_count = 0

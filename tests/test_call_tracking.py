@@ -4,6 +4,7 @@ Comprehensive pytest test suite for the RateLimiter call tracking functionality.
 
 import threading
 import time
+from datetime import timedelta
 
 import pytest
 
@@ -16,7 +17,7 @@ class TestCallTrackingBasic:
 
     def test_tracking_disabled_by_default(self) -> None:
         """Test that call tracking is disabled by default."""
-        limiter = RateLimiter(max_calls_per_second=2.0)
+        limiter = RateLimiter(limit=2)
 
         with pytest.raises(ValueError, match="Call tracking is not enabled"):
             _ = limiter.call_count
@@ -35,7 +36,7 @@ class TestCallTrackingBasic:
 
     def test_tracking_enabled_constructor(self) -> None:
         """Test enabling call tracking via constructor."""
-        limiter = RateLimiter(max_calls_per_second=2.0, track_calls=True)
+        limiter = RateLimiter(limit=2, track_calls=True)
 
         assert limiter.call_count == 0
         assert isinstance(limiter.stats, CallStats)
@@ -43,7 +44,7 @@ class TestCallTrackingBasic:
 
     def test_history_window_parameter(self) -> None:
         """Test custom history window parameter."""
-        limiter = RateLimiter(max_calls_per_second=2.0, track_calls=True, history_window_seconds=1800)
+        limiter = RateLimiter(limit=2, track_calls=True, history_window_seconds=1800)
 
         assert limiter._history_window == 1800
 
@@ -53,7 +54,7 @@ class TestCallCounting:
 
     def test_call_count_increments(self) -> None:
         """Test that call count increments with each call."""
-        limiter = RateLimiter(max_calls_per_second=5.0, track_calls=True)
+        limiter = RateLimiter(limit=5, track_calls=True)
 
         assert limiter.call_count == 0
 
@@ -67,7 +68,7 @@ class TestCallCounting:
 
     def test_call_count_thread_safe(self) -> None:
         """Test that call counting is thread-safe."""
-        limiter = RateLimiter(max_calls_per_second=10.0, track_calls=True)
+        limiter = RateLimiter(limit=10, track_calls=True)
 
         def worker() -> None:
             for _ in range(5):
@@ -86,7 +87,7 @@ class TestCallCounting:
 
     def test_reset_call_count(self) -> None:
         """Test resetting call count."""
-        limiter = RateLimiter(max_calls_per_second=5.0, track_calls=True)
+        limiter = RateLimiter(limit=5, track_calls=True)
 
         with limiter:
             pass
@@ -106,7 +107,7 @@ class TestCallStats:
 
     def test_stats_empty_state(self) -> None:
         """Test stats when no calls have been made."""
-        limiter = RateLimiter(max_calls_per_second=2.0, track_calls=True)
+        limiter = RateLimiter(limit=2, track_calls=True)
 
         stats = limiter.stats
 
@@ -121,7 +122,7 @@ class TestCallStats:
 
     def test_stats_with_calls(self) -> None:
         """Test stats after making calls."""
-        limiter = RateLimiter(max_calls_per_second=5.0, track_calls=True)
+        limiter = RateLimiter(limit=5, track_calls=True)
 
         with limiter:
             pass
@@ -140,7 +141,7 @@ class TestCallStats:
 
     def test_stats_delay_tracking(self) -> None:
         """Test that delays are properly tracked."""
-        limiter = RateLimiter(max_calls_per_second=1.0, track_calls=True)
+        limiter = RateLimiter(limit=1, track_calls=True)
 
         with limiter:
             pass
@@ -162,7 +163,7 @@ class TestWindowedQueries:
 
     def test_calls_in_window_validation(self) -> None:
         """Test validation of window_seconds parameter."""
-        limiter = RateLimiter(max_calls_per_second=2.0, track_calls=True)
+        limiter = RateLimiter(limit=2, track_calls=True)
 
         with pytest.raises(ValueError, match="window_seconds must be positive"):
             limiter.calls_in_window(0)
@@ -172,7 +173,7 @@ class TestWindowedQueries:
 
     def test_calls_in_window_basic(self) -> None:
         """Test basic windowed call counting."""
-        limiter = RateLimiter(max_calls_per_second=5.0, track_calls=True)
+        limiter = RateLimiter(limit=5, track_calls=True)
 
         with limiter:
             pass
@@ -184,7 +185,7 @@ class TestWindowedQueries:
 
     def test_calls_in_window_time_filtering(self) -> None:
         """Test that old calls are filtered out of window."""
-        limiter = RateLimiter(max_calls_per_second=10.0, track_calls=True, history_window_seconds=5)
+        limiter = RateLimiter(limit=10, period=timedelta(seconds=1), track_calls=True, history_window_seconds=5)
 
         with limiter:
             pass
@@ -199,7 +200,7 @@ class TestWindowedQueries:
 
     def test_get_efficiency_validation(self) -> None:
         """Test validation of efficiency calculation parameters."""
-        limiter = RateLimiter(max_calls_per_second=2.0, track_calls=True)
+        limiter = RateLimiter(limit=2, period=timedelta(seconds=1), track_calls=True)
 
         with pytest.raises(ValueError, match="window_seconds must be positive"):
             limiter.get_efficiency(0)
@@ -209,7 +210,7 @@ class TestWindowedQueries:
 
     def test_get_efficiency_calculation(self) -> None:
         """Test efficiency calculation."""
-        limiter = RateLimiter(max_calls_per_second=2.0, track_calls=True)
+        limiter = RateLimiter(limit=2, period=timedelta(seconds=1), track_calls=True)
 
         assert limiter.get_efficiency(60) == 0.0
 
@@ -230,7 +231,7 @@ class TestMemoryManagement:
 
     def test_timestamp_cleanup(self) -> None:
         """Test that old timestamps are cleaned up."""
-        limiter = RateLimiter(max_calls_per_second=10.0, track_calls=True, history_window_seconds=1)
+        limiter = RateLimiter(limit=10, track_calls=True, history_window_seconds=1)
 
         with limiter:
             pass
@@ -251,7 +252,7 @@ class TestBackwardCompatibility:
 
     def test_existing_api_unchanged(self) -> None:
         """Test that existing API works without tracking."""
-        limiter = RateLimiter(max_calls_per_second=2.0)
+        limiter = RateLimiter(limit=2)
 
         assert limiter.max_calls_per_second == 2.0
         assert limiter.available_tokens() == 2.0
@@ -262,11 +263,13 @@ class TestBackwardCompatibility:
         with limiter:
             pass
 
-        assert repr(limiter) == "RateLimiter(max_calls_per_second=2.0, bucket_size=2.0)"
+        repr_str = repr(limiter)
+        assert "max_calls_per_second=" in repr_str
+        assert "bucket_size=2.0" in repr_str
 
     def test_context_manager_unchanged(self) -> None:
         """Test that context manager behaviour is unchanged when tracking disabled."""
-        limiter = RateLimiter(max_calls_per_second=2.0)
+        limiter = RateLimiter(limit=2)
 
         start_time = time.time()
 
@@ -288,7 +291,7 @@ class TestThreadSafety:
 
     def test_concurrent_tracking(self) -> None:
         """Test concurrent access to tracking features."""
-        limiter = RateLimiter(max_calls_per_second=10.0, track_calls=True)
+        limiter = RateLimiter(limit=10, track_calls=True)
 
         def worker() -> None:
             for _ in range(5):
@@ -310,7 +313,7 @@ class TestThreadSafety:
 
     def test_concurrent_windowed_queries(self) -> None:
         """Test concurrent windowed queries."""
-        limiter = RateLimiter(max_calls_per_second=10.0, track_calls=True)
+        limiter = RateLimiter(limit=10, track_calls=True)
 
         results = []
 

@@ -61,8 +61,9 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 markers = [
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+    "legacy: tests for deprecated API (deselect with '-m \"not legacy\"')",
 ]
-addopts = "-v --tb=short -m 'not integration'"
+addopts = "-v --tb=short"
 
 [tool.ruff]
 line-length = 119

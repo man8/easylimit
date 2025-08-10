@@ -2,9 +2,11 @@
 A simple and reliable rate limiter implementation with context manager support.
 
 This module provides a token bucket rate limiter that can be used to limit
-the rate of operations (e.g., API calls) to a specified number per second.
+the rate of operations (e.g., API calls) to a specified number of calls in a
+given period.
 """
 
+import os
 import threading
 import time
 import warnings
@@ -34,11 +36,9 @@ class RateLimiter:
     This rate limiter uses a token bucket algorithm to control the rate
     of operations. It's thread-safe and can be used as a context manager.
 
-    Args:
-        max_calls_per_second: Maximum number of calls allowed per second
-
-    Example:
-        >>> limiter = RateLimiter(max_calls_per_second=2)
+    Preferred usage (period-based):
+        >>> from datetime import timedelta
+        >>> limiter = RateLimiter(limit=120, period=timedelta(minutes=1))
         >>> with limiter:
         ...     # This call will be rate limited
         ...     make_api_call()
@@ -52,15 +52,24 @@ class RateLimiter:
         track_calls: bool = False,
         history_window_seconds: int = 3600,
     ) -> None:
-        """Deprecated: Use rate_limit_calls and rate_limit_period instead."""
+        """Deprecated: Use limit and period instead."""
         ...
 
     @overload
     def __init__(
         self,
         *,
-        rate_limit_calls: int,
-        rate_limit_period: timedelta,
+        limit: int,
+        period: timedelta,
+        track_calls: bool = False,
+        history_window_seconds: int = 3600,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        *,
+        limit: int,
         track_calls: bool = False,
         history_window_seconds: int = 3600,
     ) -> None: ...
@@ -77,8 +86,8 @@ class RateLimiter:
         self,
         *,
         max_calls_per_second: Optional[float] = None,
-        rate_limit_calls: Optional[int] = None,
-        rate_limit_period: Optional[timedelta] = None,
+        limit: Optional[int] = None,
+        period: Optional[timedelta] = None,
         track_calls: bool = False,
         history_window_seconds: int = 3600,
     ) -> None:
@@ -87,8 +96,8 @@ class RateLimiter:
 
         Args:
             max_calls_per_second: Maximum number of calls allowed per second (deprecated)
-            rate_limit_calls: Number of calls allowed in the specified period (recommended)
-            rate_limit_period: Time period for the rate limit using timedelta (recommended)
+            limit: Number of calls allowed in the specified period (recommended)
+            period: Time period for the rate limit using timedelta (defaults to 1 second if omitted and limit is provided)
             track_calls: Enable call tracking (default: False)
             history_window_seconds: How long to keep call history for windowed queries
 
@@ -96,37 +105,41 @@ class RateLimiter:
             ValueError: If parameters are invalid or conflicting
 
         Note:
-            Use either max_calls_per_second OR both rate_limit_calls and rate_limit_period.
+            Use either max_calls_per_second OR both limit and period.
             The period-based approach is recommended for clarity and precision.
         """
         if max_calls_per_second is not None:
-            if rate_limit_calls is not None or rate_limit_period is not None:
-                raise ValueError("Cannot specify both max_calls_per_second and rate_limit_calls/rate_limit_period")
+            if limit is not None or period is not None:
+                raise ValueError("Cannot specify both max_calls_per_second and limit/period")
             if max_calls_per_second <= 0:
                 raise ValueError("max_calls_per_second must be positive")
 
-            warnings.warn(
-                "The 'max_calls_per_second' parameter is deprecated. "
-                "Use 'rate_limit_calls' and 'rate_limit_period' instead for better clarity and precision.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
+            if os.getenv("EASYLIMIT_SUPPRESS_DEPRECATIONS", "").lower() not in {"1", "true", "yes"}:
+                warnings.warn(
+                    "The 'max_calls_per_second' parameter is deprecated. "
+                    "Use 'limit' and 'period' instead for better clarity and precision.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
 
             self.max_calls_per_second = max_calls_per_second
             self.bucket_size = max_calls_per_second
-        elif rate_limit_calls is not None and rate_limit_period is not None:
-            if rate_limit_calls <= 0:
-                raise ValueError("rate_limit_calls must be positive")
-            if rate_limit_period.total_seconds() <= 0:
-                raise ValueError("rate_limit_period must be positive")
+        elif limit is not None:
+            # Default period to 1 second if not provided. Do not treat zero-duration as falsy here.
+            effective_period = period if period is not None else timedelta(seconds=1)
+            if limit <= 0:
+                raise ValueError("limit must be positive")
+            if effective_period.total_seconds() <= 0:
+                raise ValueError("period must be positive")
 
-            self.max_calls_per_second = rate_limit_calls / rate_limit_period.total_seconds()
-            self.bucket_size = float(rate_limit_calls)
-        elif max_calls_per_second is None and rate_limit_calls is None and rate_limit_period is None:
+            self.max_calls_per_second = limit / effective_period.total_seconds()
+            self.bucket_size = float(limit)
+        elif max_calls_per_second is None and limit is None and period is None:
             self.max_calls_per_second = 1.0
             self.bucket_size = 1.0
         else:
-            raise ValueError("Must specify either max_calls_per_second or both rate_limit_calls and rate_limit_period")
+            # period provided without limit
+            raise ValueError("Must specify limit when providing period, or use max_calls_per_second")
 
         self.tokens = self.bucket_size
         self.last_refill = time.time()
@@ -340,7 +353,12 @@ class RateLimiter:
             ...     make_api_call()
             >>> print(f"Calls made: {tracked_limiter.call_count}")
         """
-        return RateLimiter(max_calls_per_second=float("inf"), track_calls=track_calls)
+        # Create a valid limiter, then override internals to unlimited
+        limiter = RateLimiter(limit=1, period=timedelta(seconds=1), track_calls=track_calls)
+        limiter.max_calls_per_second = float("inf")
+        limiter.bucket_size = float("inf")
+        limiter.tokens = float("inf")
+        return limiter
 
     def __repr__(self) -> str:
         """Return string representation of the rate limiter."""

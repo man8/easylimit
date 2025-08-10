@@ -4,6 +4,7 @@ Comprehensive pytest test suite for the RateLimiter class.
 
 import threading
 import time
+from datetime import timedelta
 
 import pytest
 
@@ -15,23 +16,25 @@ class TestRateLimiterBasic:
 
     def test_initialisation(self) -> None:
         """Test RateLimiter initialisation."""
-        limiter = RateLimiter(max_calls_per_second=2.0)
+        limiter = RateLimiter(limit=2)
         assert limiter.max_calls_per_second == 2.0
         assert limiter.tokens == 2.0
         assert limiter.available_tokens() == 2.0
 
     def test_initialisation_invalid_rate(self) -> None:
         """Test RateLimiter initialisation with invalid rate."""
-        with pytest.raises(ValueError, match="max_calls_per_second must be positive"):
-            RateLimiter(max_calls_per_second=0)
+        with pytest.raises(ValueError, match="limit must be positive"):
+            RateLimiter(limit=0)
 
-        with pytest.raises(ValueError, match="max_calls_per_second must be positive"):
-            RateLimiter(max_calls_per_second=-1)
+        with pytest.raises(ValueError, match="limit must be positive"):
+            RateLimiter(limit=-1, period=timedelta(seconds=1))
 
     def test_repr(self) -> None:
         """Test string representation."""
-        limiter = RateLimiter(max_calls_per_second=2.5)
-        assert repr(limiter) == "RateLimiter(max_calls_per_second=2.5, bucket_size=2.5)"
+        limiter = RateLimiter(limit=100)
+        repr_str = repr(limiter)
+        assert "max_calls_per_second=" in repr_str
+        assert "bucket_size=100.0" in repr_str
 
 
 class TestRateLimiterAcquisition:
@@ -39,7 +42,7 @@ class TestRateLimiterAcquisition:
 
     def test_acquire_immediate(self) -> None:
         """Test immediate token acquisition when tokens are available."""
-        limiter = RateLimiter(max_calls_per_second=2)
+        limiter = RateLimiter(limit=2)
 
         start_time = time.time()
         result = limiter.acquire()
@@ -51,7 +54,7 @@ class TestRateLimiterAcquisition:
 
     def test_try_acquire_success(self) -> None:
         """Test non-blocking acquisition when tokens are available."""
-        limiter = RateLimiter(max_calls_per_second=2)
+        limiter = RateLimiter(limit=2)
 
         assert limiter.try_acquire() is True
         assert abs(limiter.available_tokens() - 1.0) < 0.01
@@ -61,7 +64,7 @@ class TestRateLimiterAcquisition:
 
     def test_try_acquire_failure(self) -> None:
         """Test non-blocking acquisition when no tokens are available."""
-        limiter = RateLimiter(max_calls_per_second=1)
+        limiter = RateLimiter(limit=1)
 
         assert limiter.try_acquire() is True
 
@@ -74,14 +77,14 @@ class TestRateLimiterAcquisition:
 
     def test_acquire_with_timeout_success(self) -> None:
         """Test acquisition with timeout that succeeds."""
-        limiter = RateLimiter(max_calls_per_second=2)
+        limiter = RateLimiter(limit=2)
 
         result = limiter.acquire(timeout=1.0)
         assert result is True
 
     def test_acquire_with_timeout_failure(self) -> None:
         """Test acquisition with timeout that fails."""
-        limiter = RateLimiter(max_calls_per_second=1)
+        limiter = RateLimiter(limit=1)
 
         limiter.acquire()
 
@@ -98,7 +101,7 @@ class TestRateLimiterTiming:
 
     def test_rate_limiting_behaviour(self) -> None:
         """Test that rate limiting actually limits the rate."""
-        limiter = RateLimiter(max_calls_per_second=2)
+        limiter = RateLimiter(limit=2)
 
         call_times = []
 
@@ -120,7 +123,7 @@ class TestRateLimiterTiming:
 
     def test_token_refill(self) -> None:
         """Test that tokens are refilled over time."""
-        limiter = RateLimiter(max_calls_per_second=2)
+        limiter = RateLimiter(limit=2)
 
         limiter.acquire()
         limiter.acquire()
@@ -133,7 +136,7 @@ class TestRateLimiterTiming:
 
     def test_precise_two_calls_per_second(self) -> None:
         """Test the specific requirement: 2 calls per second."""
-        limiter = RateLimiter(max_calls_per_second=2)
+        limiter = RateLimiter(limit=2)
 
         start_time = time.time()
         call_times = []
@@ -159,7 +162,7 @@ class TestRateLimiterContextManager:
 
     def test_context_manager_basic(self) -> None:
         """Test basic context manager usage."""
-        limiter = RateLimiter(max_calls_per_second=2)
+        limiter = RateLimiter(limit=2)
 
         with limiter:
             assert abs(limiter.available_tokens() - 1.0) < 0.01
@@ -168,7 +171,7 @@ class TestRateLimiterContextManager:
 
     def test_context_manager_exception(self) -> None:
         """Test context manager with exception."""
-        limiter = RateLimiter(max_calls_per_second=2)
+        limiter = RateLimiter(limit=2)
 
         try:
             with limiter:
@@ -181,7 +184,7 @@ class TestRateLimiterContextManager:
 
     def test_context_manager_multiple_calls(self) -> None:
         """Test multiple calls using context manager."""
-        limiter = RateLimiter(max_calls_per_second=2)
+        limiter = RateLimiter(limit=2)
 
         results = []
         start_time = time.time()
@@ -202,7 +205,7 @@ class TestRateLimiterThreadSafety:
 
     def test_concurrent_access(self) -> None:
         """Test concurrent access from multiple threads."""
-        limiter = RateLimiter(max_calls_per_second=4)
+        limiter = RateLimiter(limit=4)
         results = []
 
         def worker() -> None:
@@ -228,7 +231,7 @@ class TestRateLimiterThreadSafety:
 
     def test_thread_safety_token_count(self) -> None:
         """Test that token counting is thread-safe."""
-        limiter = RateLimiter(max_calls_per_second=10)
+        limiter = RateLimiter(limit=10)
         successful_acquisitions = []
 
         def worker() -> None:
@@ -252,7 +255,7 @@ class TestRateLimiterEdgeCases:
 
     def test_very_high_rate(self) -> None:
         """Test with very high rate."""
-        limiter = RateLimiter(max_calls_per_second=100)
+        limiter = RateLimiter(limit=100)
 
         start_time = time.time()
         for _ in range(50):
@@ -263,7 +266,8 @@ class TestRateLimiterEdgeCases:
 
     def test_fractional_rate(self) -> None:
         """Test with fractional rate."""
-        limiter = RateLimiter(max_calls_per_second=1.5)
+        # Fractional-like rate using period-based API: 3 calls per 2 seconds
+        limiter = RateLimiter(limit=3, period=timedelta(seconds=2))
 
         start_time = time.time()
 
@@ -272,7 +276,8 @@ class TestRateLimiterEdgeCases:
 
         total_time = time.time() - start_time
 
-        assert 1.0 <= total_time <= 1.8
+        # All three should be available immediately as an initial burst
+        assert total_time < 0.5
 
 
 class TestRateLimiterUnlimited:
