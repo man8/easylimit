@@ -187,8 +187,8 @@ class RateLimiter:
                     if elapsed >= timeout:
                         return False
 
-                time_to_next_token = 1.0 / self.max_calls_per_second
-                sleep_time = min(time_to_next_token, 0.1)
+                time_to_wait = (1 - self.tokens) / self.max_calls_per_second
+                sleep_time = min(time_to_wait, 0.1)
 
                 self.lock.release()
                 try:
