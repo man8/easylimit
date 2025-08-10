@@ -51,15 +51,21 @@ class TestPeriodBasedAPI:
 
     def test_conflicting_parameters(self) -> None:
         """Test that conflicting parameters raise an error."""
-        with pytest.raises(ValueError, match="Cannot specify both max_calls_per_second and rate_limit_calls/rate_limit_period"):
+        with pytest.raises(
+            ValueError, match="Cannot specify both max_calls_per_second and rate_limit_calls/rate_limit_period"
+        ):
             RateLimiter(max_calls_per_second=1.0, rate_limit_calls=10, rate_limit_period=timedelta(seconds=10))
 
     def test_incomplete_period_parameters(self) -> None:
         """Test that incomplete period parameters raise an error."""
-        with pytest.raises(ValueError, match="Must specify either max_calls_per_second or both rate_limit_calls and rate_limit_period"):
+        with pytest.raises(
+            ValueError, match="Must specify either max_calls_per_second or both rate_limit_calls and rate_limit_period"
+        ):
             RateLimiter(rate_limit_calls=10)
 
-        with pytest.raises(ValueError, match="Must specify either max_calls_per_second or both rate_limit_calls and rate_limit_period"):
+        with pytest.raises(
+            ValueError, match="Must specify either max_calls_per_second or both rate_limit_calls and rate_limit_period"
+        ):
             RateLimiter(rate_limit_period=timedelta(seconds=10))
 
     def test_backward_compatibility(self) -> None:
@@ -115,11 +121,7 @@ class TestPeriodBasedAPI:
 
     def test_period_based_with_tracking(self) -> None:
         """Test period-based API with call tracking enabled."""
-        limiter = RateLimiter(
-            rate_limit_calls=5,
-            rate_limit_period=timedelta(seconds=1),
-            track_calls=True
-        )
+        limiter = RateLimiter(rate_limit_calls=5, rate_limit_period=timedelta(seconds=1), track_calls=True)
 
         for _ in range(3):
             with limiter:

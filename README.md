@@ -25,10 +25,11 @@ pip install easylimit
 ## Quick Start
 
 ```python
+from datetime import timedelta
 from easylimit import RateLimiter
 
-# Create a rate limiter for 2 calls per second
-limiter = RateLimiter(max_calls_per_second=2)
+# Create a rate limiter using the new period-based API (recommended)
+limiter = RateLimiter(rate_limit_calls=120, rate_limit_period=timedelta(minutes=1))
 
 # Use with context manager (recommended)
 with limiter:
@@ -38,13 +39,20 @@ with limiter:
 if limiter.try_acquire():
     make_api_call()
 
+# Legacy API still supported (with deprecation warning)
+legacy_limiter = RateLimiter(max_calls_per_second=2)
+
 # Create an unlimited rate limiter (no throttling)
 unlimited_limiter = RateLimiter.unlimited()
 with unlimited_limiter:
     make_api_call()  # No rate limiting applied
 
 # Enable call tracking for monitoring
-tracked_limiter = RateLimiter(max_calls_per_second=2, track_calls=True)
+tracked_limiter = RateLimiter(
+    rate_limit_calls=120, 
+    rate_limit_period=timedelta(minutes=1),
+    track_calls=True
+)
 with tracked_limiter:
     make_api_call()
 
@@ -54,13 +62,38 @@ print(f"Efficiency: {tracked_limiter.get_efficiency():.1f}%")
 
 ## Usage Examples
 
-### Basic API Rate Limiting
+### Period-Based Rate Limiting (Recommended)
+
+```python
+from datetime import timedelta
+from easylimit import RateLimiter
+
+# Common API rate limits using period-based approach
+github_limiter = RateLimiter(rate_limit_calls=5000, rate_limit_period=timedelta(hours=1))
+twitter_limiter = RateLimiter(rate_limit_calls=300, rate_limit_period=timedelta(minutes=15))
+stripe_limiter = RateLimiter(rate_limit_calls=100, rate_limit_period=timedelta(seconds=1))
+
+# Fractional rates that were problematic with the old API
+slow_limiter = RateLimiter(rate_limit_calls=1200, rate_limit_period=timedelta(hours=1))
+
+def fetch_github_data():
+    with github_limiter:
+        # GitHub API call - allows bursting up to 5000 calls
+        pass
+
+def fetch_twitter_data():
+    with twitter_limiter:
+        # Twitter API call - 300 calls per 15 minutes
+        pass
+```
+
+### Legacy API Rate Limiting
 
 ```python
 import requests
 from easylimit import RateLimiter
 
-# Limit API calls to 2 per second
+# Legacy approach (still supported but deprecated)
 api_limiter = RateLimiter(max_calls_per_second=2)
 
 def fetch_user_data(user_id):
@@ -219,21 +252,30 @@ def process_users_with_tracking(users):
 ```python
 class RateLimiter:
     def __init__(
-        self, 
-        max_calls_per_second: float = 1.0,
+        self,
+        *,
+        max_calls_per_second: Optional[float] = None,
+        rate_limit_calls: Optional[int] = None,
+        rate_limit_period: Optional[timedelta] = None,
         track_calls: bool = False,
-        history_window_seconds: int = 3600
+        history_window_seconds: int = 3600,
     ) -> None:
         """
         Initialise the rate limiter.
         
         Args:
-            max_calls_per_second: Maximum number of calls allowed per second
+            max_calls_per_second: Maximum number of calls allowed per second (deprecated)
+            rate_limit_calls: Number of calls allowed in the specified period (recommended)
+            rate_limit_period: Time period for the rate limit using timedelta (recommended)
             track_calls: Enable call tracking (default: False)
             history_window_seconds: How long to keep call history for windowed queries
             
         Raises:
-            ValueError: If max_calls_per_second is not positive
+            ValueError: If parameters are invalid or conflicting
+            
+        Note:
+            Use either max_calls_per_second OR both rate_limit_calls and rate_limit_period.
+            The period-based approach is recommended for clarity and precision.
         """
 ```
 

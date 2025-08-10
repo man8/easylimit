@@ -10,7 +10,7 @@ import time
 import warnings
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, overload
 
 
 @dataclass
@@ -44,8 +44,38 @@ class RateLimiter:
         ...     make_api_call()
     """
 
+    @overload
     def __init__(
         self,
+        *,
+        max_calls_per_second: float,
+        track_calls: bool = False,
+        history_window_seconds: int = 3600,
+    ) -> None:
+        """Deprecated: Use rate_limit_calls and rate_limit_period instead."""
+        ...
+
+    @overload
+    def __init__(
+        self,
+        *,
+        rate_limit_calls: int,
+        rate_limit_period: timedelta,
+        track_calls: bool = False,
+        history_window_seconds: int = 3600,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        *,
+        track_calls: bool = False,
+        history_window_seconds: int = 3600,
+    ) -> None: ...
+
+    def __init__(
+        self,
+        *,
         max_calls_per_second: Optional[float] = None,
         rate_limit_calls: Optional[int] = None,
         rate_limit_period: Optional[timedelta] = None,
@@ -56,28 +86,32 @@ class RateLimiter:
         Initialise the rate limiter.
 
         Args:
-            max_calls_per_second: Maximum number of calls allowed per second (legacy parameter)
-            rate_limit_calls: Number of calls allowed in the specified period
-            rate_limit_period: Time period for the rate limit (using timedelta)
+            max_calls_per_second: Maximum number of calls allowed per second (deprecated)
+            rate_limit_calls: Number of calls allowed in the specified period (recommended)
+            rate_limit_period: Time period for the rate limit using timedelta (recommended)
             track_calls: Enable call tracking (default: False)
             history_window_seconds: How long to keep call history for windowed queries
 
         Raises:
             ValueError: If parameters are invalid or conflicting
+
+        Note:
+            Use either max_calls_per_second OR both rate_limit_calls and rate_limit_period.
+            The period-based approach is recommended for clarity and precision.
         """
         if max_calls_per_second is not None:
             if rate_limit_calls is not None or rate_limit_period is not None:
                 raise ValueError("Cannot specify both max_calls_per_second and rate_limit_calls/rate_limit_period")
             if max_calls_per_second <= 0:
                 raise ValueError("max_calls_per_second must be positive")
-            
+
             warnings.warn(
                 "The 'max_calls_per_second' parameter is deprecated. "
                 "Use 'rate_limit_calls' and 'rate_limit_period' instead for better clarity and precision.",
                 DeprecationWarning,
-                stacklevel=2
+                stacklevel=2,
             )
-            
+
             self.max_calls_per_second = max_calls_per_second
             self.bucket_size = max_calls_per_second
         elif rate_limit_calls is not None and rate_limit_period is not None:
