@@ -478,3 +478,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   - Optional call tracking with performance-optimised defaults
 - Comprehensive test suite with 26 tests
 - Zero runtime dependencies
+For development: run linting and type checks locally using uv as follows: `uv run ruff check .`, `uv run ruff format --check .`, and `uv run mypy src/`.
