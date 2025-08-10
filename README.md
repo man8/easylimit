@@ -326,6 +326,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### 0.3.0 (2025-08-10)
+
+- Adopt period-based API using `limit` and `period` (default period = 1 second when omitted)
+- Deprecate `max_calls_per_second` (still supported with warning)
+- Add `EASYLIMIT_SUPPRESS_DEPRECATIONS` env var to silence deprecation warnings in tests/scripts
+- Remove transitional `per_second` classmethod
+- Move runnable examples to `examples/` and reference them from README
+- Update and expand test suite, including example smoke tests
+
 ### 0.2.0 (2025-06-03)
 
 - Initial release
