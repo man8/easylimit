@@ -3,6 +3,7 @@ Integration tests demonstrating real-world usage of the RateLimiter.
 """
 
 import time
+from typing import Dict, Tuple
 from unittest.mock import Mock, patch
 
 import pytest
@@ -51,7 +52,7 @@ class TestRealWorldUsage:
 
         limiter = RateLimiter(limit=2)
 
-        def make_api_request(endpoint: str) -> tuple[int, dict]:
+        def make_api_request(endpoint: str) -> Tuple[int, Dict]:
             """Make a rate-limited API request."""
             import requests
 
