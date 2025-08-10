@@ -7,6 +7,7 @@ the rate of operations (e.g., API calls) to a specified number per second.
 
 import threading
 import time
+import warnings
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import List, Optional
@@ -69,6 +70,14 @@ class RateLimiter:
                 raise ValueError("Cannot specify both max_calls_per_second and rate_limit_calls/rate_limit_period")
             if max_calls_per_second <= 0:
                 raise ValueError("max_calls_per_second must be positive")
+            
+            warnings.warn(
+                "The 'max_calls_per_second' parameter is deprecated. "
+                "Use 'rate_limit_calls' and 'rate_limit_period' instead for better clarity and precision.",
+                DeprecationWarning,
+                stacklevel=2
+            )
+            
             self.max_calls_per_second = max_calls_per_second
             self.bucket_size = max_calls_per_second
         elif rate_limit_calls is not None and rate_limit_period is not None:
