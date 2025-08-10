@@ -232,7 +232,7 @@ import threading
 from easylimit import RateLimiter
 
 # Thread-safe rate limiting with tracking
-limiter = RateLimiter(rate_limit_calls=5, track_calls=True)
+limiter = RateLimiter(limit=5, track_calls=True)
 
 def worker(worker_id):
     for i in range(10):
