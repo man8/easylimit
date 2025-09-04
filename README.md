@@ -326,6 +326,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### 0.3.1 (TBD)
+
+- **Feature**: `limit` parameter now supports float values for precise fractional rates
+  - Enables direct usage like `RateLimiter(limit=0.4)` for 0.4 requests/second
+  - Eliminates need for scaling workarounds (e.g., `limit=4, period=timedelta(seconds=10)`)
+  - Maintains full backward compatibility with integer limits
+  - All existing functionality and API surface unchanged
+
 ### 0.3.0 (2025-08-10)
 
 - Adopt period-based API using `limit` and `period` (default period = 1 second when omitted)

@@ -59,7 +59,7 @@ class RateLimiter:
     def __init__(
         self,
         *,
-        limit: int,
+        limit: float,
         period: timedelta,
         track_calls: bool = False,
         history_window_seconds: int = 3600,
@@ -69,7 +69,7 @@ class RateLimiter:
     def __init__(
         self,
         *,
-        limit: int,
+        limit: float,
         track_calls: bool = False,
         history_window_seconds: int = 3600,
     ) -> None: ...
@@ -86,7 +86,7 @@ class RateLimiter:
         self,
         *,
         max_calls_per_second: Optional[float] = None,
-        limit: Optional[int] = None,
+        limit: Optional[float] = None,
         period: Optional[timedelta] = None,
         track_calls: bool = False,
         history_window_seconds: int = 3600,
