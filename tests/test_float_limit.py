@@ -124,23 +124,23 @@ class TestFloatLimitSupport:
         """Test that fractional limits work correctly after sufficient waiting time."""
         # 0.4 requests per second = 4 requests per 10 seconds
         limiter = RateLimiter(limit=0.4, period=timedelta(seconds=1))
-        
+
         assert limiter.max_calls_per_second == 0.4
         assert limiter.bucket_size == 0.4
-        
+
         # Initially, we can't acquire because we need 1.0 tokens but only have 0.4
         assert limiter.try_acquire() is False
-        
+
         # Wait long enough for tokens to accumulate to at least 1.0
         # At 0.4 tokens/sec, we need 2.5 seconds to get 1.0 tokens
         time.sleep(3.0)
-        
+
         # Now we should be able to acquire a token
         assert limiter.try_acquire() is True
-        
+
         # After acquiring, tokens are consumed, so we need to wait again for the next acquisition
         # Wait long enough for tokens to accumulate again
         time.sleep(3.0)
-        
+
         # We should be able to acquire again
         assert limiter.try_acquire() is True

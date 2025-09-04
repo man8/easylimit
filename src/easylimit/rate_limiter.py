@@ -160,7 +160,7 @@ class RateLimiter:
         if elapsed > 0:
             tokens_to_add = elapsed * self.max_calls_per_second
             new_tokens = self.tokens + tokens_to_add
-            
+
             # For fractional bucket sizes (< 1.0), allow tokens to accumulate beyond bucket_size
             # to enable token acquisition (which requires at least 1.0 tokens).
             # However, we still respect the rate limit by capping at a reasonable maximum.
@@ -171,7 +171,7 @@ class RateLimiter:
             else:
                 # For bucket sizes >= 1.0, use the original behavior
                 self.tokens = min(self.bucket_size, new_tokens)
-            
+
             self.last_refill = now
 
     def acquire(self, timeout: Optional[float] = None) -> bool:
