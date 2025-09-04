@@ -25,203 +25,83 @@ pip install easylimit
 ## Quick Start
 
 ```python
+# Simplest: 2 calls per second (defaults to a 1-second period)
 from easylimit import RateLimiter
 
-# Create a rate limiter for 2 calls per second
-limiter = RateLimiter(max_calls_per_second=2)
+limiter = RateLimiter(limit=2)
+with limiter:
+    make_api_call()
+```
 
-# Use with context manager (recommended)
+```python
+from datetime import timedelta
+from easylimit import RateLimiter
+
+# Minimal period-based usage (recommended)
+limiter = RateLimiter(limit=120, period=timedelta(minutes=1))
 with limiter:
     make_api_call()
 
-# Or acquire tokens manually
-if limiter.try_acquire():
-    make_api_call()
+# Minimal legacy usage (deprecated)
+legacy = RateLimiter(max_calls_per_second=2)
 
-# Create an unlimited rate limiter (no throttling)
-unlimited_limiter = RateLimiter.unlimited()
-with unlimited_limiter:
-    make_api_call()  # No rate limiting applied
-
-# Enable call tracking for monitoring
-tracked_limiter = RateLimiter(max_calls_per_second=2, track_calls=True)
-with tracked_limiter:
-    make_api_call()
-
-print(f"Total calls: {tracked_limiter.call_count}")
-print(f"Efficiency: {tracked_limiter.get_efficiency():.1f}%")
+# Unlimited variant
+unlimited = RateLimiter.unlimited()
 ```
 
 ## Usage Examples
 
-### Basic API Rate Limiting
+### Period-Based Rate Limiting (Recommended)
 
-```python
-import requests
-from easylimit import RateLimiter
+See runnable examples under `examples/`, including:
+- `period_based_basic.py`: context manager usage
+- `period_based_manual_acquire.py`: manual `try_acquire`/`acquire`
+- `unlimited_basic.py`: unlimited limiter, with and without tracking
+- `legacy_basic.py`: legacy API
 
-# Limit API calls to 2 per second
-api_limiter = RateLimiter(max_calls_per_second=2)
+### Legacy API Rate Limiting
 
-def fetch_user_data(user_id):
-    with api_limiter:
-        response = requests.get(f"https://api.example.com/users/{user_id}")
-        return response.json()
-
-# Make multiple API calls - automatically rate limited
-for user_id in range(1, 11):
-    user_data = fetch_user_data(user_id)
-    print(f"User {user_id}: {user_data['name']}")
-```
+See `examples/legacy_basic.py`.
 
 ### Handling Multiple APIs with Different Limits
 
-```python
-from easylimit import RateLimiter
-
-# Different rate limits for different APIs
-github_limiter = RateLimiter(max_calls_per_second=1)    # 1 call/sec
-twitter_limiter = RateLimiter(max_calls_per_second=0.5)  # 1 call every 2 seconds
-
-def fetch_github_data():
-    with github_limiter:
-        # GitHub API call
-        pass
-
-def fetch_twitter_data():
-    with twitter_limiter:
-        # Twitter API call
-        pass
-```
+See `examples/period_based_basic.py` and `examples/period_based_manual_acquire.py` for similar usage.
 
 ### Non-blocking Token Acquisition
 
-```python
-from easylimit import RateLimiter
-
-limiter = RateLimiter(max_calls_per_second=1)
-
-# Try to acquire a token without blocking
-if limiter.try_acquire():
-    print("Token acquired, making API call")
-    make_api_call()
-else:
-    print("Rate limit reached, skipping call")
-```
+See `examples/period_based_manual_acquire.py`.
 
 ### Timeout-based Acquisition
 
-```python
-from easylimit import RateLimiter
-
-limiter = RateLimiter(max_calls_per_second=1)
-
-# Wait up to 5 seconds for a token
-if limiter.acquire(timeout=5.0):
-    print("Token acquired within timeout")
-    make_api_call()
-else:
-    print("Timeout reached, no token available")
-```
+See `examples/period_based_manual_acquire.py`.
 
 ### Unlimited Rate Limiting
 
 For scenarios where rate limiting is optional or needs to be disabled:
 
-```python
-from easylimit import RateLimiter
-
-# Create an unlimited rate limiter (optimal performance)
-unlimited_limiter = RateLimiter.unlimited()
-
-# Use the same API - no rate limiting occurs
-with unlimited_limiter:
-    make_api_call()
-
-# Enable call tracking when needed
-tracked_unlimited = RateLimiter.unlimited(track_calls=True)
-with tracked_unlimited:
-    make_api_call()
-
-print(f"Calls made: {tracked_unlimited.call_count}")
-
-# Conditional rate limiting pattern
-def process_data(throttle=True):
-    limiter = RateLimiter(max_calls_per_second=2) if throttle else RateLimiter.unlimited()
-    
-    with limiter:
-        # Code works the same regardless of throttling
-        make_api_call()
-```
+See `examples/unlimited_basic.py`.
 
 ### Call Tracking and Monitoring
 
-```python
-from easylimit import RateLimiter, CallStats
+See examples for tracked usage patterns.
 
-# Enable call tracking with custom history window
-limiter = RateLimiter(
-    max_calls_per_second=2.0,
-    track_calls=True,
-    history_window_seconds=1800  # Keep 30 minutes of history
-)
-
-# Make some API calls
-for i in range(5):
-    with limiter:
-        make_api_call(f"request_{i}")
-
-# Check call statistics
-print(f"Total calls made: {limiter.call_count}")
-print(f"Calls in last 5 minutes: {limiter.calls_in_window(300)}")
-print(f"Current efficiency: {limiter.get_efficiency(60):.1f}%")
-
-# Get detailed statistics
-stats: CallStats = limiter.stats
-print(f"Average delay per call: {stats.average_delay_seconds:.3f}s")
-print(f"Maximum delay encountered: {stats.max_delay_seconds:.3f}s")
-print(f"Overall calls per second: {stats.calls_per_second_average:.2f}")
-
-# Reset tracking data
-limiter.reset_call_count()
-```
-
-
+See examples for tracking and efficiency calculations.
 
 ## API Reference
 
 ### RateLimiter
 
-```python
-class RateLimiter:
-    def __init__(
-        self,
-        max_calls_per_second: float = 1.0,
-        track_calls: bool = False,
-        history_window_seconds: int = 3600
-    ) -> None:
-        """
-        Initialise the rate limiter.
-
-        Args:
-            max_calls_per_second: Maximum number of calls allowed per second
-            track_calls: Enable call tracking (default: False)
-            history_window_seconds: How long to keep call history for windowed queries
-
-        Raises:
-            ValueError: If max_calls_per_second is not positive
-        """
-```
+See `src/easylimit/rate_limiter.py` for full API reference.
 
 #### Static Methods
 
 - **`unlimited(track_calls: bool = False) -> RateLimiter`**
-  
+
   Create an unlimited rate limiter that performs no rate limiting.
-  
+
   - `track_calls`: Enable call tracking (default: False for optimal performance)
   - Returns: RateLimiter instance configured for unlimited calls
-  
+
   This method returns a RateLimiter instance that maintains the same API surface whilst allowing unlimited calls per second. Ideal for conditional rate limiting scenarios.
 
 #### Methods
@@ -352,7 +232,7 @@ import threading
 from easylimit import RateLimiter
 
 # Thread-safe rate limiting with tracking
-limiter = RateLimiter(max_calls_per_second=5, track_calls=True)
+limiter = RateLimiter(limit=5, track_calls=True)
 
 def worker(worker_id):
     for i in range(10):
@@ -385,6 +265,12 @@ cd easylimit
 # Install uv (if not already installed)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
+# Create an in-project virtualenv (.venv)
+uv venv --python 3.13
+
+# (Optional) activate it; uv run does not require activation
+source .venv/bin/activate
+
 # Install dependencies
 uv sync --all-extras --dev
 ```
@@ -392,14 +278,17 @@ uv sync --all-extras --dev
 ### Running Tests
 
 ```bash
-# Run unit tests only (default)
+# Run all tests (default)
 uv run pytest
 
-# Run all tests including integration tests
-uv run pytest -m ""
+# Run only unit tests (skip integration and legacy)
+uv run pytest -m 'not integration and not legacy'
 
 # Run only integration tests
 uv run pytest -m integration
+
+# Run only legacy tests
+uv run pytest -m legacy
 
 # Run with coverage
 uv run pytest --cov=easylimit --cov-report=html
@@ -453,6 +342,23 @@ The API remains exactly the same, so no code changes are required. Simply update
 
 ## Changelog
 
+### 0.3.1 (TBD)
+
+- **Feature**: `limit` parameter now supports float values for precise fractional rates
+  - Enables direct usage like `RateLimiter(limit=0.4)` for 0.4 requests/second
+  - Eliminates need for scaling workarounds (e.g., `limit=4, period=timedelta(seconds=10)`)
+  - Maintains full backward compatibility with integer limits
+  - All existing functionality and API surface unchanged
+
+### 0.3.0 (2025-08-10)
+
+- Adopt period-based API using `limit` and `period` (default period = 1 second when omitted)
+- Deprecate `max_calls_per_second` (still supported with warning)
+- Add `EASYLIMIT_SUPPRESS_DEPRECATIONS` env var to silence deprecation warnings in tests/scripts
+- Remove transitional `per_second` classmethod
+- Move runnable examples to `examples/` and reference them from README
+- Update and expand test suite, including example smoke tests
+
 ### 0.2.0 (2025-06-03)
 
 - Initial PyPI release
@@ -470,3 +376,4 @@ The API remains exactly the same, so no code changes are required. Simply update
   - Optional call tracking with performance-optimised defaults
 - Comprehensive test suite with 26 tests
 - Zero runtime dependencies
+For development: run linting and type checks locally using uv as follows: `uv run ruff check .`, `uv run ruff format --check .`, and `uv run mypy src/`.
