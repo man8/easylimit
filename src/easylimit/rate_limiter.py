@@ -6,6 +6,7 @@ the rate of operations (e.g., API calls) to a specified number of calls in a
 given period.
 """
 
+import asyncio
 import os
 import threading
 import time
@@ -152,6 +153,7 @@ class RateLimiter:
         self._start_time = datetime.now() if track_calls else None
         self._last_call_time: Optional[datetime] = None
         self.lock = threading.RLock()
+        self.async_lock = asyncio.Lock()
 
     def _refill_tokens(self) -> None:
         """Refill tokens based on elapsed time since last refill."""
@@ -371,6 +373,78 @@ class RateLimiter:
         limiter.bucket_size = float("inf")
         limiter.tokens = float("inf")
         return limiter
+
+    async def async_acquire(self, timeout: Optional[float] = None) -> bool:
+        """
+        Async version of acquire that doesn't block the event loop.
+
+        Args:
+            timeout: Maximum time to wait for a token (None for no timeout)
+
+        Returns:
+            True if token was acquired, False if timeout occurred
+        """
+        start_time = time.time()
+
+        async with self.async_lock:
+            while True:
+                self._refill_tokens()
+
+                if self.tokens >= 1:
+                    self.tokens -= 1
+                    return True
+
+                if timeout is not None:
+                    elapsed = time.time() - start_time
+                    if elapsed >= timeout:
+                        return False
+
+                time_to_wait = (1 - self.tokens) / self.max_calls_per_second
+                sleep_time = min(time_to_wait, 0.1)
+
+                self.async_lock.release()
+                try:
+                    await asyncio.sleep(sleep_time)
+                finally:
+                    await self.async_lock.acquire()
+
+    async def async_try_acquire(self) -> bool:
+        """
+        Async version of try_acquire.
+
+        Returns:
+            True if token was acquired, False otherwise
+        """
+        async with self.async_lock:
+            self._refill_tokens()
+            if self.tokens >= 1:
+                self.tokens -= 1
+                return True
+            return False
+
+    async def __aenter__(self) -> "RateLimiter":
+        """Async context manager entry - acquire a token without blocking event loop."""
+        start_time = time.time()
+        await self.async_acquire()
+
+        if self._track_calls:
+            async with self.async_lock:
+                delay = time.time() - start_time
+                self._call_count += 1
+                self._timestamps.append(time.time())
+                self._delays.append(delay)
+                self._last_call_time = datetime.now()
+
+                cutoff_time = time.time() - self._history_window
+                self._timestamps = [ts for ts in self._timestamps if ts >= cutoff_time]
+
+        return self
+
+    async def __aexit__(
+        self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Optional[object]
+    ) -> None:
+        """Async context manager exit - nothing to do."""
+        pass
 
     def __repr__(self) -> str:
         """Return string representation of the rate limiter."""
