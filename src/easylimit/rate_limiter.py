@@ -153,7 +153,7 @@ class RateLimiter:
         self._start_time = datetime.now() if track_calls else None
         self._last_call_time: Optional[datetime] = None
         self.lock = threading.RLock()
-        self.async_lock = asyncio.Lock()
+        self._async_lock: Optional[asyncio.Lock] = None
 
     def _refill_tokens(self) -> None:
         """Refill tokens based on elapsed time since last refill."""
@@ -374,6 +374,12 @@ class RateLimiter:
         limiter.tokens = float("inf")
         return limiter
 
+    def _get_async_lock(self) -> asyncio.Lock:
+        """Get or create the async lock lazily to avoid RuntimeError when no event loop exists."""
+        if self._async_lock is None:
+            self._async_lock = asyncio.Lock()
+        return self._async_lock
+
     async def async_acquire(self, timeout: Optional[float] = None) -> bool:
         """
         Async version of acquire that doesn't block the event loop.
@@ -385,9 +391,10 @@ class RateLimiter:
             True if token was acquired, False if timeout occurred
         """
         start_time = time.time()
+        async_lock = self._get_async_lock()
 
-        async with self.async_lock:
-            while True:
+        while True:
+            async with async_lock:
                 self._refill_tokens()
 
                 if self.tokens >= 1:
@@ -402,11 +409,7 @@ class RateLimiter:
                 time_to_wait = (1 - self.tokens) / self.max_calls_per_second
                 sleep_time = min(time_to_wait, 0.1)
 
-                self.async_lock.release()
-                try:
-                    await asyncio.sleep(sleep_time)
-                finally:
-                    await self.async_lock.acquire()
+            await asyncio.sleep(sleep_time)
 
     async def async_try_acquire(self) -> bool:
         """
@@ -415,7 +418,8 @@ class RateLimiter:
         Returns:
             True if token was acquired, False otherwise
         """
-        async with self.async_lock:
+        async_lock = self._get_async_lock()
+        async with async_lock:
             self._refill_tokens()
             if self.tokens >= 1:
                 self.tokens -= 1
@@ -428,7 +432,8 @@ class RateLimiter:
         await self.async_acquire()
 
         if self._track_calls:
-            async with self.async_lock:
+            async_lock = self._get_async_lock()
+            async with async_lock:
                 delay = time.time() - start_time
                 self._call_count += 1
                 self._timestamps.append(time.time())
