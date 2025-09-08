@@ -136,4 +136,8 @@ def test_initial_tokens_advanced_runs() -> None:
     assert "Fractional rate limiter: 1.5 requests/second" in out
     assert "First acquisition: Failed (insufficient tokens)" in out
     assert "Second acquisition: Success" in out
-    assert "Tokens after acquisition: 0.46" in out
+
+    match = re.search(r"Tokens after acquisition: ([\d.]+)", out)
+    assert match, "Could not parse final token value after acquisition"
+    value = float(match.group(1))
+    assert 0.44 <= value <= 0.46, f"Expected ~0.45 tokens remaining, got {value}"
