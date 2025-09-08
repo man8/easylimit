@@ -1,9 +1,8 @@
 """
 Async test suite for RateLimiter async API and context manager.
 """
-import asyncio
-import time
 import threading
+import time
 
 import pytest
 
@@ -17,7 +16,7 @@ class TestAsyncAcquisition:
 
     async def test_async_acquire_immediate(self) -> None:
         """Test immediate async token acquisition."""
-        limiter = RateLimiter(max_calls_per_second=2.0)
+        limiter = RateLimiter(limit=2)
         start = time.time()
         got = await limiter.async_acquire()
         assert got is True
@@ -26,7 +25,7 @@ class TestAsyncAcquisition:
 
     async def test_async_try_acquire_success_and_failure(self) -> None:
         """Test async try_acquire success and failure cases."""
-        limiter = RateLimiter(max_calls_per_second=1.0)
+        limiter = RateLimiter(limit=1)
         assert await limiter.async_try_acquire() is True
         start = time.time()
         got = await limiter.async_try_acquire()
@@ -36,12 +35,12 @@ class TestAsyncAcquisition:
 
     async def test_async_acquire_with_timeout_success(self) -> None:
         """Test async acquire with timeout that succeeds."""
-        limiter = RateLimiter(max_calls_per_second=1.0)
+        limiter = RateLimiter(limit=1)
         assert await limiter.async_acquire(timeout=0.5) is True
 
     async def test_async_acquire_with_timeout_failure(self) -> None:
         """Test async acquire with timeout that fails."""
-        limiter = RateLimiter(max_calls_per_second=1.0)
+        limiter = RateLimiter(limit=1)
         assert await limiter.async_acquire() is True
         start = time.time()
         got = await limiter.async_acquire(timeout=0.1)
@@ -55,7 +54,7 @@ class TestAsyncContextManager:
 
     async def test_async_with_basic_timing(self) -> None:
         """Test async context manager timing behaviour."""
-        limiter = RateLimiter(max_calls_per_second=2.0)
+        limiter = RateLimiter(limit=2)
         t0 = time.time()
         stamps = []
         for _ in range(4):
@@ -68,7 +67,7 @@ class TestAsyncContextManager:
 
     async def test_async_call_tracking(self) -> None:
         """Test call tracking with async context manager."""
-        limiter = RateLimiter(max_calls_per_second=2.0, track_calls=True)
+        limiter = RateLimiter(limit=2, track_calls=True)
         for _ in range(3):
             async with limiter:
                 pass
@@ -83,7 +82,7 @@ class TestMixedSyncAsync:
 
     async def test_mixed_concurrent_usage(self) -> None:
         """Test concurrent sync and async usage."""
-        limiter = RateLimiter(max_calls_per_second=3.0, track_calls=True)
+        limiter = RateLimiter(limit=3, track_calls=True)
         results = []
 
         def sync_worker(n: int) -> None:

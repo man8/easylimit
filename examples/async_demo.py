@@ -22,19 +22,19 @@ async def main() -> None:
     """Run the async rate limiter demonstration."""
     print("Async Rate Limiter Demo - 2 calls per second")
     print("=" * 50)
-    
+
     limiter = RateLimiter(limit=2)
     t0 = time.time()
-    
+
     for i in range(1, 7):
         async with limiter:
             await fetch(i)
             elapsed = time.time() - t0
             print(f"[{elapsed:.2f}s] completed {i}")
-    
+
     total_time = time.time() - t0
     average_rate = 6 / total_time
-    
+
     print("=" * 50)
     print(f"Total time: {total_time:.2f} seconds")
     print(f"Average rate: {average_rate:.2f} calls per second")
