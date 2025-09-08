@@ -144,16 +144,16 @@ See `src/easylimit/rate_limiter.py` for full API reference.
   - Returns: `True` if token was acquired, `False` otherwise
 
 - **`async_acquire(timeout: Optional[float] = None) -> bool`**
-  
+
   Async version of acquire that doesn't block the event loop.
-  
+
   - `timeout`: Maximum time to wait for a token (None for no timeout)
   - Returns: `True` if token was acquired, `False` if timeout occurred
 
 - **`async_try_acquire() -> bool`**
-  
+
   Async version of try_acquire.
-  
+
   - Returns: `True` if token was acquired, `False` otherwise
 
 - **`available_tokens() -> float`**
@@ -375,7 +375,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### 0.3.1 (TBD)
+### 0.3.1 (2025-09-08)
 
 - **Feature**: `limit` parameter now supports float values for precise fractional rates
   - Enables direct usage like `RateLimiter(limit=0.4)` for 0.4 requests/second
