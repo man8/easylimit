@@ -375,13 +375,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### Unreleased
-
-- Added async context manager support
-- Added `async_acquire()` and `async_try_acquire()` methods
-- Added `__aenter__()` and `__aexit__()` for async context manager protocol
-- Thread-safe mixed sync/async usage with unified locking
-
 ### 0.3.1 (TBD)
 
 - **Feature**: `limit` parameter now supports float values for precise fractional rates
@@ -394,6 +387,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   - Enables scenarios like gradual startup, controlled bursts, and empty bucket initialisation
   - Supports float values and maintains full backward compatibility
   - Includes comprehensive examples and test coverage
+- **Feature**: Added async context manager support
+  - Added `async_acquire()` and `async_try_acquire()` methods
+  - Added `__aenter__()` and `__aexit__()` for async context manager protocol
+  - Thread-safe mixed sync/async usage with unified locking
 
 ### 0.3.0 (2025-08-10)
 
