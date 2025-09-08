@@ -83,44 +83,9 @@ See `examples/unlimited_basic.py`.
 
 ### Asynchronous Usage
 
-The rate limiter supports async context managers for use in asyncio applications:
+The rate limiter supports async context managers and async acquisition methods for use in asyncio applications.
 
-```python
-import asyncio
-from easylimit import RateLimiter
-
-limiter = RateLimiter(limit=2)
-
-async def fetch_user(user_id: int):
-    async with limiter:
-        return await get_user_from_api(user_id)
-
-async def main():
-    users = await asyncio.gather(*(fetch_user(i) for i in range(5)))
-    print(users)
-
-asyncio.run(main())
-```
-
-You can also use the async acquisition methods directly:
-
-```python
-import asyncio
-from easylimit import RateLimiter
-
-limiter = RateLimiter(limit=1)
-
-async def make_calls():
-    # Try to acquire without blocking
-    if await limiter.async_try_acquire():
-        await make_api_call()
-    
-    # Acquire with timeout
-    if await limiter.async_acquire(timeout=5.0):
-        await make_api_call()
-
-asyncio.run(make_calls())
-```
+See `examples/async_demo.py` for a complete demonstration of async usage patterns.
 ### Call Tracking and Monitoring
 
 See examples for tracked usage patterns.
