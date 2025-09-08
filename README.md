@@ -357,11 +357,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   - Enables scenarios like gradual startup, controlled bursts, and empty bucket initialisation
   - Supports float values and maintains full backward compatibility
   - Includes comprehensive examples and test coverage
-- **Feature**: `initial_tokens` parameter for controlling initial burst behaviour
-  - Allows setting the number of tokens available at startup (defaults to full bucket)
-  - Enables scenarios like gradual startup, controlled bursts, and empty bucket initialisation
-  - Supports float values and maintains full backward compatibility
-  - Includes comprehensive examples and test coverage
 
 ### 0.3.0 (2025-08-10)
 
