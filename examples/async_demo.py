@@ -23,7 +23,7 @@ async def main() -> None:
     print("Async Rate Limiter Demo - 2 calls per second")
     print("=" * 50)
     
-    limiter = RateLimiter(max_calls_per_second=2.0)
+    limiter = RateLimiter(limit=2)
     t0 = time.time()
     
     for i in range(1, 7):
