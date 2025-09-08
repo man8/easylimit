@@ -121,7 +121,6 @@ async def make_calls():
 
 asyncio.run(make_calls())
 ```
-
 ### Call Tracking and Monitoring
 
 See examples for tracked usage patterns.
