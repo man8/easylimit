@@ -16,20 +16,28 @@ def run_example(script: str) -> str:
 
 def test_period_based_basic_runs() -> None:
     out = run_example("period_based_basic.py")
-    assert "outputs=" in out
+    assert "outputs= call-0,call-1,call-2" in out
 
 
 def test_period_based_manual_acquire_runs() -> None:
     out = run_example("period_based_manual_acquire.py")
-    assert "acquired=" in out
+    assert "acquired= A,B,-" in out
+    assert "acquire_with_timeout= False" in out
 
 
 def test_unlimited_basic_runs() -> None:
     out = run_example("unlimited_basic.py")
     assert "unlimited_ok=True" in out
-    assert "tracked_calls=" in out
+    assert "tracked_calls= 5" in out
 
 
 def test_legacy_basic_runs() -> None:
     out = run_example("legacy_basic.py")
     assert "legacy_ok=True" in out
+
+
+def test_async_demo_runs() -> None:
+    out = run_example("async_demo.py")
+    assert "Async Rate Limiter Demo" in out
+    assert "Fetched item" in out
+    assert "Total time:" in out
