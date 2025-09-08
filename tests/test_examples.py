@@ -41,3 +41,19 @@ def test_async_demo_runs() -> None:
     assert "Async Rate Limiter Demo" in out
     assert "Fetched item" in out
     assert "Total time:" in out
+
+
+def test_initial_tokens_basic_runs() -> None:
+    """Test that initial_tokens_basic.py runs without error."""
+    out = run_example("initial_tokens_basic.py")
+    assert "Initial Tokens Example" in out
+    assert "API Client Example" in out
+
+
+def test_initial_tokens_advanced_runs() -> None:
+    """Test that initial_tokens_advanced.py runs without error."""
+    out = run_example("initial_tokens_advanced.py")
+    assert "Gradual Startup Example" in out
+    assert "Burst Control Example" in out
+    assert "Call Tracking with Initial Tokens" in out
+    assert "Fractional Initial Tokens" in out

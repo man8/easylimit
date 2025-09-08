@@ -10,6 +10,7 @@ A simple, precise Python rate limiter with built-in context manager support for 
 
 - **Simple and Intuitive**: Easy-to-use context manager interface
 - **Precise Rate Limiting**: Token bucket algorithm ensures accurate timing
+- **Burst Control**: Configure initial tokens to control startup burst behaviour
 - **Call Tracking**: Optional tracking of calls, delays, and efficiency metrics
 - **Thread-Safe**: Safe for use in multi-threaded applications
 - **Zero Dependencies**: No runtime dependencies, lightweight and fast
@@ -42,6 +43,9 @@ limiter = RateLimiter(limit=120, period=timedelta(minutes=1))
 with limiter:
     make_api_call()
 
+# Control initial burst behaviour
+controlled_burst = RateLimiter(limit=10, initial_tokens=3)  # Start with 3 tokens instead of 10
+
 # Minimal legacy usage (deprecated)
 legacy = RateLimiter(max_calls_per_second=2)
 
@@ -57,6 +61,8 @@ See runnable examples under `examples/`, including:
 - `period_based_basic.py`: context manager usage
 - `period_based_manual_acquire.py`: manual `try_acquire`/`acquire`
 - `unlimited_basic.py`: unlimited limiter, with and without tracking
+- `initial_tokens_basic.py`: controlling initial burst behaviour
+- `initial_tokens_advanced.py`: advanced initial tokens scenarios
 - `legacy_basic.py`: legacy API
 
 ### Legacy API Rate Limiting
@@ -95,6 +101,19 @@ See examples for tracking and efficiency calculations.
 ## API Reference
 
 ### RateLimiter
+
+#### Constructor Parameters
+
+- **`limit`**: Maximum number of calls per period (float, required unless using legacy API)
+- **`period`**: Time period for the rate limit using timedelta (defaults to 1 second)
+- **`initial_tokens`**: Initial number of tokens in the bucket (defaults to `limit` for full bucket)
+- **`track_calls`**: Enable call tracking (default: False)
+- **`history_window_seconds`**: How long to keep call history for windowed queries (default: 3600)
+
+The `initial_tokens` parameter allows you to control the initial burst behaviour:
+- `None` (default): Start with a full bucket (backward compatible)
+- `0`: Start with an empty bucket (no initial burst)
+- Any value between 0 and `limit`: Start with a specific number of tokens
 
 See `src/easylimit/rate_limiter.py` for full API reference.
 
@@ -370,6 +389,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   - Eliminates need for scaling workarounds (e.g., `limit=4, period=timedelta(seconds=10)`)
   - Maintains full backward compatibility with integer limits
   - All existing functionality and API surface unchanged
+- **Feature**: `initial_tokens` parameter for controlling initial burst behaviour
+  - Allows setting the number of tokens available at startup (defaults to full bucket)
+  - Enables scenarios like gradual startup, controlled bursts, and empty bucket initialisation
+  - Supports float values and maintains full backward compatibility
+  - Includes comprehensive examples and test coverage
 
 ### 0.3.0 (2025-08-10)
 
