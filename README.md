@@ -81,6 +81,47 @@ For scenarios where rate limiting is optional or needs to be disabled:
 
 See `examples/unlimited_basic.py`.
 
+### Asynchronous Usage
+
+The rate limiter supports async context managers for use in asyncio applications:
+
+```python
+import asyncio
+from easylimit import RateLimiter
+
+limiter = RateLimiter(limit=2)
+
+async def fetch_user(user_id: int):
+    async with limiter:
+        return await get_user_from_api(user_id)
+
+async def main():
+    users = await asyncio.gather(*(fetch_user(i) for i in range(5)))
+    print(users)
+
+asyncio.run(main())
+```
+
+You can also use the async acquisition methods directly:
+
+```python
+import asyncio
+from easylimit import RateLimiter
+
+limiter = RateLimiter(limit=1)
+
+async def make_calls():
+    # Try to acquire without blocking
+    if await limiter.async_try_acquire():
+        await make_api_call()
+    
+    # Acquire with timeout
+    if await limiter.async_acquire(timeout=5.0):
+        await make_api_call()
+
+asyncio.run(make_calls())
+```
+
 ### Call Tracking and Monitoring
 
 See examples for tracked usage patterns.
@@ -117,6 +158,19 @@ See `src/easylimit/rate_limiter.py` for full API reference.
 
   Try to acquire a token without blocking.
 
+  - Returns: `True` if token was acquired, `False` otherwise
+
+- **`async_acquire(timeout: Optional[float] = None) -> bool`**
+  
+  Async version of acquire that doesn't block the event loop.
+  
+  - `timeout`: Maximum time to wait for a token (None for no timeout)
+  - Returns: `True` if token was acquired, `False` if timeout occurred
+
+- **`async_try_acquire() -> bool`**
+  
+  Async version of try_acquire.
+  
   - Returns: `True` if token was acquired, `False` otherwise
 
 - **`available_tokens() -> float`**
@@ -167,12 +221,20 @@ See `src/easylimit/rate_limiter.py` for full API reference.
 
 #### Context Manager Support
 
-The `RateLimiter` can be used as a context manager:
+The `RateLimiter` can be used as both sync and async context manager:
 
+**Synchronous:**
 ```python
 with limiter:
     # This block will only execute after acquiring a token
     make_api_call()
+```
+
+**Asynchronous:**
+```python
+async with limiter:
+    # This block will only execute after acquiring a token
+    await make_async_api_call()
 ```
 
 ### CallStats
@@ -226,6 +288,10 @@ When `track_calls=True`, the rate limiter maintains detailed statistics:
 ## Thread Safety
 
 `easylimit` is fully thread-safe and can be used safely in multi-threaded applications. All operations, including call tracking, are protected by internal locking mechanisms using `threading.RLock()`.
+
+### Thread Safety with asyncio
+
+The rate limiter supports mixed sync and async usage safely. Internal state is protected by a single lock (`threading.RLock`), with async paths delegating state mutations to a background thread via `asyncio.to_thread` to avoid blocking the event loop. This ensures that mixed sync/async usage is safe and consistent.
 
 ```python
 import threading
@@ -326,6 +392,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### Unreleased
+
+- Added async context manager support
+- Added `async_acquire()` and `async_try_acquire()` methods
+- Added `__aenter__()` and `__aexit__()` for async context manager protocol
+- Thread-safe mixed sync/async usage with unified locking
+
 ### 0.3.1 (TBD)
 
 - **Feature**: `limit` parameter now supports float values for precise fractional rates
@@ -342,7 +415,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Remove transitional `per_second` classmethod
 - Move runnable examples to `examples/` and reference them from README
 - Update and expand test suite, including example smoke tests
-
 ### 0.2.0 (2025-06-03)
 
 - Initial release

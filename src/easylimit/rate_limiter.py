@@ -153,7 +153,6 @@ class RateLimiter:
         self._start_time = datetime.now() if track_calls else None
         self._last_call_time: Optional[datetime] = None
         self.lock = threading.RLock()
-        self._async_lock: Optional[asyncio.Lock] = None
 
     def _refill_tokens(self) -> None:
         """Refill tokens based on elapsed time since last refill."""
@@ -239,18 +238,8 @@ class RateLimiter:
         """Context manager entry - acquire a token."""
         start_time = time.time()
         self.acquire()
-
         if self._track_calls:
-            with self.lock:
-                delay = time.time() - start_time
-                self._call_count += 1
-                self._timestamps.append(time.time())
-                self._delays.append(delay)
-                self._last_call_time = datetime.now()
-
-                cutoff_time = time.time() - self._history_window
-                self._timestamps = [ts for ts in self._timestamps if ts >= cutoff_time]
-
+            self._record_call(time.time() - start_time)
         return self
 
     def __exit__(self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Optional[object]) -> None:
@@ -374,11 +363,37 @@ class RateLimiter:
         limiter.tokens = float("inf")
         return limiter
 
-    def _get_async_lock(self) -> asyncio.Lock:
-        """Get or create the async lock lazily to avoid RuntimeError when no event loop exists."""
-        if self._async_lock is None:
-            self._async_lock = asyncio.Lock()
-        return self._async_lock
+    def _try_consume_one_token_sync(self, start_time: float, timeout: Optional[float]) -> tuple[bool, float, bool]:
+        """Try to consume a token under the sync lock; return (acquired, sleep_time, timed_out)."""
+        with self.lock:
+            self._refill_tokens()
+            if self.tokens >= 1:
+                self.tokens -= 1
+                return True, 0.0, False
+            if timeout is not None and (time.time() - start_time) >= timeout:
+                return False, 0.0, True
+            time_to_wait = (1 - self.tokens) / self.max_calls_per_second
+            return False, min(time_to_wait, 0.1), False
+
+    def _try_acquire_sync(self) -> bool:
+        """Non-blocking try_acquire under sync lock."""
+        with self.lock:
+            self._refill_tokens()
+            if self.tokens >= 1:
+                self.tokens -= 1
+                return True
+            return False
+
+    def _record_call(self, delay: float) -> None:
+        """Record tracking info under sync lock."""
+        with self.lock:
+            self._call_count += 1
+            now_ts = time.time()
+            self._timestamps.append(now_ts)
+            self._delays.append(delay)
+            self._last_call_time = datetime.now()
+            cutoff_time = now_ts - self._history_window
+            self._timestamps = [ts for ts in self._timestamps if ts >= cutoff_time]
 
     async def async_acquire(self, timeout: Optional[float] = None) -> bool:
         """
@@ -391,24 +406,14 @@ class RateLimiter:
             True if token was acquired, False if timeout occurred
         """
         start_time = time.time()
-        async_lock = self._get_async_lock()
-
         while True:
-            async with async_lock:
-                self._refill_tokens()
-
-                if self.tokens >= 1:
-                    self.tokens -= 1
-                    return True
-
-                if timeout is not None:
-                    elapsed = time.time() - start_time
-                    if elapsed >= timeout:
-                        return False
-
-                time_to_wait = (1 - self.tokens) / self.max_calls_per_second
-                sleep_time = min(time_to_wait, 0.1)
-
+            acquired, sleep_time, timed_out = await asyncio.to_thread(
+                self._try_consume_one_token_sync, start_time, timeout
+            )
+            if acquired:
+                return True
+            if timed_out:
+                return False
             await asyncio.sleep(sleep_time)
 
     async def async_try_acquire(self) -> bool:
@@ -418,31 +423,15 @@ class RateLimiter:
         Returns:
             True if token was acquired, False otherwise
         """
-        async_lock = self._get_async_lock()
-        async with async_lock:
-            self._refill_tokens()
-            if self.tokens >= 1:
-                self.tokens -= 1
-                return True
-            return False
+        return await asyncio.to_thread(self._try_acquire_sync)
 
     async def __aenter__(self) -> "RateLimiter":
         """Async context manager entry - acquire a token without blocking event loop."""
         start_time = time.time()
         await self.async_acquire()
-
         if self._track_calls:
-            async_lock = self._get_async_lock()
-            async with async_lock:
-                delay = time.time() - start_time
-                self._call_count += 1
-                self._timestamps.append(time.time())
-                self._delays.append(delay)
-                self._last_call_time = datetime.now()
-
-                cutoff_time = time.time() - self._history_window
-                self._timestamps = [ts for ts in self._timestamps if ts >= cutoff_time]
-
+            delay = time.time() - start_time
+            await asyncio.to_thread(self._record_call, delay)
         return self
 
     async def __aexit__(
