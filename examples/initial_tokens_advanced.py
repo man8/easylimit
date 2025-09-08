@@ -83,12 +83,9 @@ def tracking_with_initial_tokens():
     print("Making calls using context manager:")
     for i in range(4):
         try:
-            if limiter.acquire(timeout=0.1):
-                with limiter:
-                    print(f"Call {i + 1}: Completed")
-                    time.sleep(0.1)  # Simulate work
-            else:
-                print(f"Call {i + 1}: Timed out (rate limited)")
+            with limiter:
+                print(f"Call {i + 1}: Completed")
+                time.sleep(0.1)  # Simulate work
         except Exception:
             print(f"Call {i + 1}: Failed to acquire token")
 
