@@ -87,6 +87,11 @@ For scenarios where rate limiting is optional or needs to be disabled:
 
 See `examples/unlimited_basic.py`.
 
+### Asynchronous Usage
+
+The rate limiter supports async context managers and async acquisition methods for use in asyncio applications.
+
+See `examples/async_demo.py` for a complete demonstration of async usage patterns.
 ### Call Tracking and Monitoring
 
 See examples for tracked usage patterns.
@@ -138,6 +143,19 @@ See `src/easylimit/rate_limiter.py` for full API reference.
 
   - Returns: `True` if token was acquired, `False` otherwise
 
+- **`async_acquire(timeout: Optional[float] = None) -> bool`**
+  
+  Async version of acquire that doesn't block the event loop.
+  
+  - `timeout`: Maximum time to wait for a token (None for no timeout)
+  - Returns: `True` if token was acquired, `False` if timeout occurred
+
+- **`async_try_acquire() -> bool`**
+  
+  Async version of try_acquire.
+  
+  - Returns: `True` if token was acquired, `False` otherwise
+
 - **`available_tokens() -> float`**
 
   Get the current number of available tokens.
@@ -186,12 +204,20 @@ See `src/easylimit/rate_limiter.py` for full API reference.
 
 #### Context Manager Support
 
-The `RateLimiter` can be used as a context manager:
+The `RateLimiter` can be used as both sync and async context manager:
 
+**Synchronous:**
 ```python
 with limiter:
     # This block will only execute after acquiring a token
     make_api_call()
+```
+
+**Asynchronous:**
+```python
+async with limiter:
+    # This block will only execute after acquiring a token
+    await make_async_api_call()
 ```
 
 ### CallStats
@@ -245,6 +271,10 @@ When `track_calls=True`, the rate limiter maintains detailed statistics:
 ## Thread Safety
 
 `easylimit` is fully thread-safe and can be used safely in multi-threaded applications. All operations, including call tracking, are protected by internal locking mechanisms using `threading.RLock()`.
+
+### Thread Safety with asyncio
+
+The rate limiter supports mixed sync and async usage safely. Internal state is protected by a single lock (`threading.RLock`), with async paths delegating state mutations to a background thread via `asyncio.to_thread` to avoid blocking the event loop. This ensures that mixed sync/async usage is safe and consistent.
 
 ```python
 import threading
@@ -357,6 +387,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   - Enables scenarios like gradual startup, controlled bursts, and empty bucket initialisation
   - Supports float values and maintains full backward compatibility
   - Includes comprehensive examples and test coverage
+- **Feature**: Added async context manager support
+  - Added `async_acquire()` and `async_try_acquire()` methods
+  - Added `__aenter__()` and `__aexit__()` for async context manager protocol
+  - Thread-safe mixed sync/async usage with unified locking
 
 ### 0.3.0 (2025-08-10)
 
@@ -366,7 +400,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Remove transitional `per_second` classmethod
 - Move runnable examples to `examples/` and reference them from README
 - Update and expand test suite, including example smoke tests
-
 ### 0.2.0 (2025-06-03)
 
 - Initial release
