@@ -39,7 +39,6 @@ async def main() -> None:
     print("=" * 50)
     print(f"Total time: {total_time:.2f} seconds")
     print(f"Average rate: {average_rate:.2f} calls per second")
-    print("✅ Async rate limiting demonstration complete!")
 
 
 if __name__ == "__main__":
