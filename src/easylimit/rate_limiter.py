@@ -7,13 +7,29 @@ given period.
 """
 
 import asyncio
+import functools
 import os
 import threading
 import time
 import warnings
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import List, Optional, overload
+from typing import Any, Callable, List, Optional, Tuple, TypeVar, overload
+
+T = TypeVar("T")
+
+
+async def _to_thread(func: Callable[..., T], /, *args: Any) -> T:
+    """
+    Run a callable in a thread and await the result.
+
+    Uses asyncio.to_thread when available (Python 3.9+), otherwise falls back
+    to run_in_executor for Python 3.8 compatibility.
+    """
+    if hasattr(asyncio, "to_thread"):
+        return await asyncio.to_thread(func, *args)
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, functools.partial(func, *args))
 
 
 @dataclass
@@ -363,7 +379,7 @@ class RateLimiter:
         limiter.tokens = float("inf")
         return limiter
 
-    def _try_consume_one_token_sync(self, start_time: float, timeout: Optional[float]) -> tuple[bool, float, bool]:
+    def _try_consume_one_token_sync(self, start_time: float, timeout: Optional[float]) -> Tuple[bool, float, bool]:
         """Try to consume a token under the sync lock; return (acquired, sleep_time, timed_out)."""
         with self.lock:
             self._refill_tokens()
@@ -407,9 +423,7 @@ class RateLimiter:
         """
         start_time = time.time()
         while True:
-            acquired, sleep_time, timed_out = await asyncio.to_thread(
-                self._try_consume_one_token_sync, start_time, timeout
-            )
+            acquired, sleep_time, timed_out = await _to_thread(self._try_consume_one_token_sync, start_time, timeout)
             if acquired:
                 return True
             if timed_out:
@@ -423,7 +437,7 @@ class RateLimiter:
         Returns:
             True if token was acquired, False otherwise
         """
-        return await asyncio.to_thread(self._try_acquire_sync)
+        return await _to_thread(self._try_acquire_sync)
 
     async def __aenter__(self) -> "RateLimiter":
         """Async context manager entry - acquire a token without blocking event loop."""
@@ -431,7 +445,7 @@ class RateLimiter:
         await self.async_acquire()
         if self._track_calls:
             delay = time.time() - start_time
-            await asyncio.to_thread(self._record_call, delay)
+            await _to_thread(self._record_call, delay)
         return self
 
     async def __aexit__(
