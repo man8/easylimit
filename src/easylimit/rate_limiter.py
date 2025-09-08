@@ -51,6 +51,7 @@ class RateLimiter:
         max_calls_per_second: float,
         track_calls: bool = False,
         history_window_seconds: int = 3600,
+        initial_tokens: Optional[float] = None,
     ) -> None:
         """Deprecated: Use limit and period instead."""
         ...
@@ -63,6 +64,7 @@ class RateLimiter:
         period: timedelta,
         track_calls: bool = False,
         history_window_seconds: int = 3600,
+        initial_tokens: Optional[float] = None,
     ) -> None: ...
 
     @overload
@@ -72,6 +74,7 @@ class RateLimiter:
         limit: float,
         track_calls: bool = False,
         history_window_seconds: int = 3600,
+        initial_tokens: Optional[float] = None,
     ) -> None: ...
 
     @overload
@@ -80,6 +83,7 @@ class RateLimiter:
         *,
         track_calls: bool = False,
         history_window_seconds: int = 3600,
+        initial_tokens: Optional[float] = None,
     ) -> None: ...
 
     def __init__(
@@ -90,6 +94,7 @@ class RateLimiter:
         period: Optional[timedelta] = None,
         track_calls: bool = False,
         history_window_seconds: int = 3600,
+        initial_tokens: Optional[float] = None,
     ) -> None:
         """
         Initialise the rate limiter.
@@ -100,6 +105,7 @@ class RateLimiter:
             period: Time period for the rate limit using timedelta (defaults to 1 second if omitted and limit is provided)
             track_calls: Enable call tracking (default: False)
             history_window_seconds: How long to keep call history for windowed queries
+            initial_tokens: Initial number of tokens in the bucket (defaults to bucket_size for full bucket)
 
         Raises:
             ValueError: If parameters are invalid or conflicting
@@ -141,7 +147,15 @@ class RateLimiter:
             # period provided without limit
             raise ValueError("Must specify limit when providing period, or use max_calls_per_second")
 
-        self.tokens = self.bucket_size
+        if initial_tokens is not None:
+            if not isinstance(initial_tokens, (int, float)):
+                raise ValueError("initial_tokens must be a number")
+            if initial_tokens < 0:
+                raise ValueError("initial_tokens must be non-negative")
+            if initial_tokens > self.bucket_size:
+                raise ValueError(f"initial_tokens ({initial_tokens}) cannot exceed bucket_size ({self.bucket_size})")
+
+        self.tokens = initial_tokens if initial_tokens is not None else self.bucket_size
         self.last_refill = time.time()
 
         self._track_calls = track_calls
