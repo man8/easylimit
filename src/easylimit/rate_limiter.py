@@ -252,6 +252,8 @@ class RateLimiter:
             self._refill_tokens()
             if self.tokens >= 1:
                 self.tokens -= 1
+                if self._track_calls:
+                    self._record_call(0.0)
                 return True
             return False
 
@@ -398,6 +400,8 @@ class RateLimiter:
             self._refill_tokens()
             if self.tokens >= 1:
                 self.tokens -= 1
+                if self._track_calls:
+                    self._record_call(time.time() - start_time)
                 return True, 0.0, False
             if timeout is not None and (time.time() - start_time) >= timeout:
                 return False, 0.0, True
@@ -410,6 +414,8 @@ class RateLimiter:
             self._refill_tokens()
             if self.tokens >= 1:
                 self.tokens -= 1
+                if self._track_calls:
+                    self._record_call(0.0)
                 return True
             return False
 

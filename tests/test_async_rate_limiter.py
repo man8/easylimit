@@ -77,6 +77,25 @@ class TestAsyncContextManager:
         assert stats.total_calls == 3
         assert stats.average_delay_seconds >= 0.0
 
+    async def test_async_acquire_records_tracking(self) -> None:
+        """Direct async_acquire() should increment the tracked call count."""
+        limiter = RateLimiter(limit=2, track_calls=True)
+
+        assert limiter.call_count == 0
+        assert await limiter.async_acquire() is True
+        assert limiter.call_count == 1
+
+    async def test_async_try_acquire_records_tracking(self) -> None:
+        """async_try_acquire() should only count successful acquisitions."""
+        limiter = RateLimiter(limit=1, track_calls=True)
+
+        assert await limiter.async_try_acquire() is True
+        assert limiter.call_count == 1
+
+        # Subsequent call has no tokens available yet
+        assert await limiter.async_try_acquire() is False
+        assert limiter.call_count == 1
+
 
 class TestMixedSyncAsync:
     """Test mixed sync and async usage to ensure unified locking works."""

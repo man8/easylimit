@@ -85,6 +85,28 @@ class TestCallCounting:
 
         assert limiter.call_count == 15
 
+    def test_call_count_increments_for_acquire(self) -> None:
+        """Call tracking should include direct acquire() usage."""
+        limiter = RateLimiter(limit=5, track_calls=True)
+
+        assert limiter.call_count == 0
+        assert limiter.acquire() is True
+        assert limiter.call_count == 1
+
+    def test_call_count_increments_for_try_acquire(self) -> None:
+        """Call tracking should include try_acquire() successes only."""
+        limiter = RateLimiter(limit=2, track_calls=True)
+
+        assert limiter.try_acquire() is True
+        assert limiter.call_count == 1
+
+        assert limiter.try_acquire() is True
+        assert limiter.call_count == 2
+
+        # Bucket is empty now; failure should not increment the counter
+        assert limiter.try_acquire() is False
+        assert limiter.call_count == 2
+
     def test_reset_call_count(self) -> None:
         """Test resetting call count."""
         limiter = RateLimiter(limit=5, track_calls=True)
