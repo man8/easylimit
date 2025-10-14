@@ -5,7 +5,6 @@ properly increment call_count when track_calls=True.
 This addresses the bug reported in MAN8-5762.
 """
 
-import asyncio
 from datetime import timedelta
 
 import pytest
@@ -47,7 +46,7 @@ class TestDirectAcquireTracking:
     async def test_async_reproduce_issue(self) -> None:
         """
         Reproduce the exact scenario from the bug report.
-        
+
         This test reproduces the issue described in MAN8-5762 and verifies the fix.
         """
         limiter = RateLimiter(limit=100, period=timedelta(hours=1), track_calls=True)
