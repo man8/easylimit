@@ -375,6 +375,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### 0.3.2 (2025-10-14)
+
+- **Bug Fix**: Fixed call tracking bug in `async_acquire()` method
+  - `async_acquire()` now properly increments call count when `track_calls=True`
+  - Fixes issue where direct `async_acquire()` calls were not being tracked
+  - Context manager usage was already working correctly
+  - Maintains full backward compatibility
+
 ### 0.3.1 (2025-09-08)
 
 - **Feature**: `limit` parameter now supports float values for precise fractional rates
