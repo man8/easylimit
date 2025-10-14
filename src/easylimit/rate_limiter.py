@@ -223,6 +223,8 @@ class RateLimiter:
 
                 if self.tokens >= 1:
                     self.tokens -= 1
+                    if self._track_calls:
+                        self._record_call(time.time() - start_time)
                     return True
 
                 if timeout is not None:
@@ -266,10 +268,7 @@ class RateLimiter:
 
     def __enter__(self) -> "RateLimiter":
         """Context manager entry - acquire a token."""
-        start_time = time.time()
         self.acquire()
-        if self._track_calls:
-            self._record_call(time.time() - start_time)
         return self
 
     def __exit__(self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Optional[object]) -> None:
@@ -439,6 +438,9 @@ class RateLimiter:
         while True:
             acquired, sleep_time, timed_out = await _to_thread(self._try_consume_one_token_sync, start_time, timeout)
             if acquired:
+                if self._track_calls:
+                    delay = time.time() - start_time
+                    await _to_thread(self._record_call, delay)
                 return True
             if timed_out:
                 return False
@@ -455,11 +457,7 @@ class RateLimiter:
 
     async def __aenter__(self) -> "RateLimiter":
         """Async context manager entry - acquire a token without blocking event loop."""
-        start_time = time.time()
         await self.async_acquire()
-        if self._track_calls:
-            delay = time.time() - start_time
-            await _to_thread(self._record_call, delay)
         return self
 
     async def __aexit__(
