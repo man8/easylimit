@@ -82,8 +82,7 @@ class RateLimiter:
         track_calls: bool = False,
         history_window_seconds: int = 3600,
         initial_tokens: Optional[float] = None,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @overload
     def __init__(
@@ -93,8 +92,7 @@ class RateLimiter:
         track_calls: bool = False,
         history_window_seconds: int = 3600,
         initial_tokens: Optional[float] = None,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @overload
     def __init__(
@@ -103,8 +101,7 @@ class RateLimiter:
         track_calls: bool = False,
         history_window_seconds: int = 3600,
         initial_tokens: Optional[float] = None,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     def __init__(
         self,
