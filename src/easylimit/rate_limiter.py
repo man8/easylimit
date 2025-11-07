@@ -444,9 +444,6 @@ class RateLimiter:
         while True:
             acquired, sleep_time, timed_out = await _to_thread(self._try_consume_one_token_sync, start_time, timeout)
             if acquired:
-                if self._track_calls:
-                    delay = time.time() - start_time
-                    await _to_thread(self._record_call, delay)
                 return True
             if timed_out:
                 return False
