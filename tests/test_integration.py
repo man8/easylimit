@@ -1,17 +1,14 @@
 """
-Integration tests demonstrating real-world usage of the RateLimiter.
+Tests demonstrating real-world usage scenarios and performance characteristics of the RateLimiter.
 """
 
 import time
 from typing import Dict, Tuple
 from unittest.mock import Mock, patch
 
-import pytest
-
 from easylimit import RateLimiter
 
 
-@pytest.mark.integration
 class TestRealWorldUsage:
     """Test real-world usage scenarios."""
 
@@ -132,7 +129,6 @@ class TestRealWorldUsage:
         assert "failed" in statuses
 
 
-@pytest.mark.integration
 class TestPerformanceCharacteristics:
     """Test performance characteristics of the rate limiter."""
 

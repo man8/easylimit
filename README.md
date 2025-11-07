@@ -332,11 +332,8 @@ uv sync --all-extras --dev
 # Run all tests (default)
 uv run pytest
 
-# Run only unit tests (skip integration and legacy)
-uv run pytest -m 'not integration and not legacy'
-
-# Run only integration tests
-uv run pytest -m integration
+# Run only non-legacy tests
+uv run pytest -m 'not legacy'
 
 # Run only legacy tests
 uv run pytest -m legacy

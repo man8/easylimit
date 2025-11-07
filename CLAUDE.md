@@ -25,15 +25,15 @@ uv sync --all-extras --dev
 # Run all tests
 uv run pytest
 
-# Unit tests only (skip integration & legacy)
-uv run pytest -m 'not integration and not legacy'
+# Non-legacy tests only
+uv run pytest -m 'not legacy'
 
 # Run with coverage
 uv run pytest --cov=easylimit --cov-report=html
 
 # Run specific test markers
-uv run pytest -m integration
 uv run pytest -m legacy
+uv run pytest -m asyncio
 
 # Run single test file
 uv run pytest tests/test_rate_limiter.py
@@ -155,8 +155,7 @@ Access via: `call_count`, `stats`, `calls_in_window(seconds)`, `get_efficiency(w
 
 ### Testing
 - Tests live in `tests/` directory
-- Use pytest markers: `@pytest.mark.integration`, `@pytest.mark.legacy`
-- Async tests need `@pytest.mark.asyncio` decorator
+- Use pytest markers: `@pytest.mark.legacy`, `@pytest.mark.asyncio`
 - Class-based organization: `class Test*` groups related tests
 - CI runs tests on Python 3.8-3.13
 
@@ -210,14 +209,13 @@ Access via: `call_count`, `stats`, `calls_in_window(seconds)`, `get_efficiency(w
 - `test_float_limit.py`: Float limit support
 - `test_period_based_api.py`: Period-based API
 - `test_legacy_api.py`: Deprecated API
-- `test_integration.py`: Multi-threaded scenarios
+- `test_integration.py`: Real-world usage scenarios and performance tests
 - `test_deprecation.py`: Deprecation warnings
 - `test_mixed_sync_async.py`: Mixed sync/async usage
 - `test_examples.py`: Smoke tests of example scripts
 
 ### CI/CD Pipeline
-- **Test job:** Runs on Python 3.8-3.13 (lint, type check, unit tests, full suite)
-- **Integration job:** Runs integration tests on Python 3.12 after test job passes
+- **Test job:** Runs on Python 3.8-3.13 (lint, type check, all tests)
 
 ## Community & Contribution
 

@@ -60,8 +60,8 @@ source .venv/bin/activate
 # Run all tests
 uv run pytest
 
-# Run only unit tests (skip integration and legacy)
-uv run pytest -m 'not integration and not legacy'
+# Run only non-legacy tests
+uv run pytest -m 'not legacy'
 
 # Run with coverage
 uv run pytest --cov=easylimit --cov-report=html
@@ -115,7 +115,6 @@ uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv ru
 - Use pytest for all tests
 - Class-based test organization: `class Test*`
 - Use markers for test categories:
-  - `@pytest.mark.integration` - Integration tests
   - `@pytest.mark.legacy` - Tests for deprecated API
   - `@pytest.mark.asyncio` - Async tests
 - Aim for high test coverage (currently 100%)
