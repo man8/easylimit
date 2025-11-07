@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed call tracking bug where `try_acquire()` and `async_try_acquire()` did not increment `call_count` when `track_calls=True`
 - Fixed call tracking bug where `acquire()` did not increment `call_count` when called directly (outside context manager) with `track_calls=True`
+- Fixed inefficient double-locking in `_record_call()` implementation
 - All acquisition methods now consistently track calls when tracking is enabled
 
 ### Changed
