@@ -252,6 +252,8 @@ class RateLimiter:
             self._refill_tokens()
             if self.tokens >= 1:
                 self.tokens -= 1
+                if self._track_calls:
+                    self._record_call(0.0)
                 return True
             return False
 
@@ -398,6 +400,8 @@ class RateLimiter:
             self._refill_tokens()
             if self.tokens >= 1:
                 self.tokens -= 1
+                if self._track_calls:
+                    self._record_call(time.time() - start_time)
                 return True, 0.0, False
             if timeout is not None and (time.time() - start_time) >= timeout:
                 return False, 0.0, True
@@ -410,19 +414,25 @@ class RateLimiter:
             self._refill_tokens()
             if self.tokens >= 1:
                 self.tokens -= 1
+                if self._track_calls:
+                    self._record_call(0.0)
                 return True
             return False
 
     def _record_call(self, delay: float) -> None:
-        """Record tracking info under sync lock."""
-        with self.lock:
-            self._call_count += 1
-            now_ts = time.time()
-            self._timestamps.append(now_ts)
-            self._delays.append(delay)
-            self._last_call_time = datetime.now()
-            cutoff_time = now_ts - self._history_window
-            self._timestamps = [ts for ts in self._timestamps if ts >= cutoff_time]
+        """
+        Record tracking info (caller must hold self.lock).
+
+        Args:
+            delay: Time spent waiting for token acquisition
+        """
+        self._call_count += 1
+        now_ts = time.time()
+        self._timestamps.append(now_ts)
+        self._delays.append(delay)
+        self._last_call_time = datetime.now()
+        cutoff_time = now_ts - self._history_window
+        self._timestamps = [ts for ts in self._timestamps if ts >= cutoff_time]
 
     async def async_acquire(self, timeout: Optional[float] = None) -> bool:
         """
@@ -438,9 +448,6 @@ class RateLimiter:
         while True:
             acquired, sleep_time, timed_out = await _to_thread(self._try_consume_one_token_sync, start_time, timeout)
             if acquired:
-                if self._track_calls:
-                    delay = time.time() - start_time
-                    await _to_thread(self._record_call, delay)
                 return True
             if timed_out:
                 return False
