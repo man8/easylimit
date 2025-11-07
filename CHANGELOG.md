@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.4] - 2025-11-07
 
+### Added
+- PEP 561 `py.typed` marker file for full type hint support in downstream projects using mypy
+
 ### Fixed
 - Fixed call tracking bug where `try_acquire()` and `async_try_acquire()` did not increment `call_count` when `track_calls=True`
 - Fixed call tracking bug where `acquire()` did not increment `call_count` when called directly (outside context manager) with `track_calls=True`
