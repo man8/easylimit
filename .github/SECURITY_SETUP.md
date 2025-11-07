@@ -61,26 +61,29 @@ Navigate to: `Settings` → `Branches` → `Add rule`
 
 **For `main` branch:**
 
-### Required Settings:
-- ✅ Require a pull request before merging
-  - Required approvals: 1 (for teams) or 0 (for solo maintainer)
-  - Dismiss stale PR approvals when new commits are pushed
+### Current Configuration (Standard for Solo-Maintained Projects):
 - ✅ Require status checks to pass before merging
   - Required checks:
-    - `Test / test (3.8)`
-    - `Test / test (3.9)`
-    - `Test / test (3.10)`
-    - `Test / test (3.11)`
-    - `Test / test (3.12)`
-    - `Test / test (3.13)`
-    - `Test / integration`
+    - `test (3.8)`
+    - `test (3.9)`
+    - `test (3.10)`
+    - `test (3.11)`
+    - `test (3.12)`
+    - `test (3.13)`
+  - Not strict (allows merging when branch is behind)
 - ✅ Require conversation resolution before merging
-- ✅ Do not allow bypassing the above settings (for teams)
+- ✅ Do not allow force pushes
+- ✅ Do not allow deletions
+- ❌ Do not require pull requests (maintainers can push directly)
+- ❌ Do not enforce for administrators (maintainers can bypass if needed)
 
-### Optional Settings:
+### Optional Settings for Teams:
+- ⚠️ Require pull request reviews (set required approvals: 1+)
 - ⚠️ Require signed commits (recommended for sensitive projects)
 - ⚠️ Require linear history (prevents merge commits)
 - ⚠️ Include administrators (applies rules to admins too)
+
+**Note**: The current configuration allows solo maintainers to push directly to main while still ensuring CI tests pass for pull requests from contributors.
 
 ## Recommended CodeQL Workflow
 
