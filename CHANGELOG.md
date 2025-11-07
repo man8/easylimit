@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3] - 2025-11-07
+
+### Added
+- Comprehensive community health documentation
+  - CONTRIBUTING.md with development guidelines and Conventional Commits spec
+  - CODE_OF_CONDUCT.md (Contributor Covenant v2.1)
+  - SECURITY.md with vulnerability reporting process
+  - GitHub issue templates (bug report, feature request)
+  - GitHub pull request template
+- Development infrastructure
+  - Pre-commit hooks for secret scanning, linting, and formatting
+  - Conventional Commits validation
+  - SECURITY_SETUP.md guide for GitHub security features
+- Repository discoverability improvements
+  - Added 8 topics for better GitHub search visibility
+  - License and Downloads badges in README
+
+### Changed
+- CI/CD workflow optimized: removed redundant integration job
+- Branch protection configured with standard rules for open source projects
+- Test markers simplified: removed misleading "integration" markers
+- Documentation improvements across README, CONTRIBUTING, and CLAUDE.md
+
+### Fixed
+- GitHub Actions workflow permissions set explicitly (CodeQL compliance)
+
+### Infrastructure
+- First release to PyPI using automated GitHub Actions with Trusted Publishing
+- Python 3.13 classifier added to package metadata
+- Dynamic versioning configured (single source in __init__.py)
+
 ## [0.3.2] - 2025-10-14
 
 ### Fixed
