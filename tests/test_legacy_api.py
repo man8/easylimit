@@ -7,7 +7,6 @@ import time
 from datetime import timedelta
 
 import pytest
-
 from easylimit import RateLimiter
 
 # Mark all tests in this module as legacy

@@ -24,7 +24,7 @@ repos:
         name: TruffleHog secret scan
         entry: bash -c 'trufflehog git file://. --since-commit HEAD --only-verified --fail'
         language: system
-        stages: [commit]
+        stages: [pre-commit]
 
   # Python code quality - Ruff (linter and formatter)
   - repo: https://github.com/astral-sh/ruff-pre-commit
