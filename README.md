@@ -4,7 +4,7 @@
 [![PyPI version](https://badge.fury.io/py/easylimit.svg)](https://badge.fury.io/py/easylimit)
 [![Python versions](https://img.shields.io/pypi/pyversions/easylimit.svg)](https://pypi.org/project/easylimit/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Downloads](https://pepy.tech/badge/easylimit)](https://pepy.tech/project/easylimit)
+[![Downloads](https://img.shields.io/pypi/dm/easylimit)](https://pypi.org/project/easylimit/)
 
 A simple, precise Python rate limiter with built-in context manager support for hassle-free API throttling.
 
