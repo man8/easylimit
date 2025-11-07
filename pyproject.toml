@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "easylimit"
-version = "0.3.2"
+dynamic = ["version"]
 description = "A simple, precise Python rate limiter with built-in context manager support for hassle-free API throttling"
 readme = "README.md"
 license = "MIT"
@@ -21,6 +21,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: System :: Networking",
     "Topic :: Internet :: WWW/HTTP",
@@ -43,6 +44,9 @@ dev = [
     "mypy>=1.0.0",
     "requests>=2.25.0",
 ]
+
+[tool.hatch.version]
+path = "src/easylimit/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/easylimit"]

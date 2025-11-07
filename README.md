@@ -3,6 +3,8 @@
 [![Test](https://github.com/man8/easylimit/actions/workflows/test.yml/badge.svg)](https://github.com/man8/easylimit/actions/workflows/test.yml)
 [![PyPI version](https://badge.fury.io/py/easylimit.svg)](https://badge.fury.io/py/easylimit)
 [![Python versions](https://img.shields.io/pypi/pyversions/easylimit.svg)](https://pypi.org/project/easylimit/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Downloads](https://pepy.tech/badge/easylimit)](https://pepy.tech/project/easylimit)
 
 A simple, precise Python rate limiter with built-in context manager support for hassle-free API throttling.
 
@@ -375,54 +377,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### 0.3.2 (2025-10-14)
-
-- **Bug Fix**: Fixed call tracking bug in `async_acquire()` method
-  - `async_acquire()` now properly increments call count when `track_calls=True`
-  - Fixes issue where direct `async_acquire()` calls were not being tracked
-  - Context manager usage was already working correctly
-  - Maintains full backward compatibility
-
-### 0.3.1 (2025-09-08)
-
-- **Feature**: `limit` parameter now supports float values for precise fractional rates
-  - Enables direct usage like `RateLimiter(limit=0.4)` for 0.4 requests/second
-  - Eliminates need for scaling workarounds (e.g., `limit=4, period=timedelta(seconds=10)`)
-  - Maintains full backward compatibility with integer limits
-  - All existing functionality and API surface unchanged
-- **Feature**: `initial_tokens` parameter for controlling initial burst behaviour
-  - Allows setting the number of tokens available at startup (defaults to full bucket)
-  - Enables scenarios like gradual startup, controlled bursts, and empty bucket initialisation
-  - Supports float values and maintains full backward compatibility
-  - Includes comprehensive examples and test coverage
-- **Feature**: Added async context manager support
-  - Added `async_acquire()` and `async_try_acquire()` methods
-  - Added `__aenter__()` and `__aexit__()` for async context manager protocol
-  - Thread-safe mixed sync/async usage with unified locking
-
-### 0.3.0 (2025-08-10)
-
-- Adopt period-based API using `limit` and `period` (default period = 1 second when omitted)
-- Deprecate `max_calls_per_second` (still supported with warning)
-- Add `EASYLIMIT_SUPPRESS_DEPRECATIONS` env var to silence deprecation warnings in tests/scripts
-- Remove transitional `per_second` classmethod
-- Move runnable examples to `examples/` and reference them from README
-- Update and expand test suite, including example smoke tests
-### 0.2.0 (2025-06-03)
-
-- Initial release
-- Token bucket rate limiting algorithm
-- Context manager support
-- Thread-safe implementation
-- **Call tracking capabilities**
-  - Optional call counting and statistics
-  - Time-windowed call history tracking
-  - Efficiency metrics and delay analysis
-  - Thread-safe tracking with bounded memory usage
-- **Unlimited rate limiting**
-  - `RateLimiter.unlimited()` static method for non-limiting instances
-  - Maintains full API compatibility for conditional rate limiting
-  - Optional call tracking with performance-optimised defaults
-- Comprehensive test suite with 26 tests
-- Zero runtime dependencies
-For development: run linting and type checks locally using uv as follows: `uv run ruff check .`, `uv run ruff format --check .`, and `uv run mypy src/`.
+See [CHANGELOG.md](CHANGELOG.md) for version history and release notes.

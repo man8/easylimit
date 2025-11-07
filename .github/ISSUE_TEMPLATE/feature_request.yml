@@ -1,0 +1,54 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please help us understand your use case.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Use Case
+      description: What problem does this feature solve? What are you trying to accomplish?
+      placeholder: |
+        I'm working on [use case] and I need to [goal].
+        Currently, I have to [workaround], which is problematic because...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution or feature you'd like to see
+      placeholder: |
+        I'd like easylimit to support [feature].
+
+        Example usage:
+        ```python
+        from easylimit import RateLimiter
+
+        limiter = RateLimiter(...)  # proposed API
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Alternative solutions or features you've considered
+      placeholder: |
+        - Alternative approach 1: ...
+        - Alternative approach 2: ...
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context, examples, or references to similar features in other libraries
+      placeholder: |
+        Similar feature in [other library]: ...
+        Link to relevant discussion: ...
