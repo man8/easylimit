@@ -8,6 +8,7 @@ This addresses the bug reported in MAN8-5762.
 from datetime import timedelta
 
 import pytest
+
 from easylimit import RateLimiter
 
 

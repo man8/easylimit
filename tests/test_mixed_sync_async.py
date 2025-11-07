@@ -13,6 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import List
 
 import pytest
+
 from easylimit import RateLimiter
 
 pytestmark = pytest.mark.asyncio

@@ -6,6 +6,7 @@ import threading
 import time
 
 import pytest
+
 from easylimit import RateLimiter
 
 pytestmark = pytest.mark.asyncio

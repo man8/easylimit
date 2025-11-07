@@ -6,6 +6,7 @@ import warnings
 from datetime import timedelta
 
 import pytest
+
 from easylimit import RateLimiter
 
 
