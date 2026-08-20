@@ -59,6 +59,11 @@ class RateLimiter:
         >>> with limiter:
         ...     # This call will be rate limited
         ...     make_api_call()
+
+    A token is consumed on entry and is not returned if the body raises, which
+    matches standard token bucket semantics: the attempt has already been made.
+    Pass ``refund_on_error=True`` to return the token to the bucket whenever the
+    body raises, so that failed attempts do not count towards the rate limit.
     """
 
     @overload
@@ -69,6 +74,7 @@ class RateLimiter:
         track_calls: bool = False,
         history_window_seconds: int = 3600,
         initial_tokens: Optional[float] = None,
+        refund_on_error: bool = False,
     ) -> None:
         """Deprecated: Use limit and period instead."""
         ...
@@ -82,6 +88,7 @@ class RateLimiter:
         track_calls: bool = False,
         history_window_seconds: int = 3600,
         initial_tokens: Optional[float] = None,
+        refund_on_error: bool = False,
     ) -> None: ...
 
     @overload
@@ -92,6 +99,7 @@ class RateLimiter:
         track_calls: bool = False,
         history_window_seconds: int = 3600,
         initial_tokens: Optional[float] = None,
+        refund_on_error: bool = False,
     ) -> None: ...
 
     @overload
@@ -101,6 +109,7 @@ class RateLimiter:
         track_calls: bool = False,
         history_window_seconds: int = 3600,
         initial_tokens: Optional[float] = None,
+        refund_on_error: bool = False,
     ) -> None: ...
 
     def __init__(
@@ -112,6 +121,7 @@ class RateLimiter:
         track_calls: bool = False,
         history_window_seconds: int = 3600,
         initial_tokens: Optional[float] = None,
+        refund_on_error: bool = False,
     ) -> None:
         """
         Initialise the rate limiter.
@@ -123,6 +133,7 @@ class RateLimiter:
             track_calls: Enable call tracking (default: False)
             history_window_seconds: How long to keep call history for windowed queries
             initial_tokens: Initial number of tokens in the bucket (defaults to bucket_size for full bucket)
+            refund_on_error: Return the token to the bucket when the context manager body raises (default: False)
 
         Raises:
             ValueError: If parameters are invalid or conflicting
@@ -175,6 +186,7 @@ class RateLimiter:
         self.tokens = initial_tokens if initial_tokens is not None else self.bucket_size
         self.last_refill = time.time()
 
+        self._refund_on_error = refund_on_error
         self._track_calls = track_calls
         self._history_window = history_window_seconds
         self._call_count = 0
@@ -184,26 +196,30 @@ class RateLimiter:
         self._last_call_time: Optional[datetime] = None
         self.lock = threading.RLock()
 
+    def _max_tokens(self) -> float:
+        """Maximum number of tokens the bucket may hold."""
+        # For fractional bucket sizes (< 1.0), allow tokens to accumulate beyond bucket_size
+        # to enable token acquisition (which requires at least 1.0 tokens).
+        # However, we still respect the rate limit by capping at a reasonable maximum.
+        if self.bucket_size < 1.0:
+            # Allow accumulation up to at least 1.0, but cap at 2.0 to prevent excessive buildup
+            return max(1.0, min(2.0, self.bucket_size * 2))
+        return self.bucket_size
+
     def _refill_tokens(self) -> None:
         """Refill tokens based on elapsed time since last refill."""
         now = time.time()
         elapsed = now - self.last_refill
         if elapsed > 0:
             tokens_to_add = elapsed * self.max_calls_per_second
-            new_tokens = self.tokens + tokens_to_add
-
-            # For fractional bucket sizes (< 1.0), allow tokens to accumulate beyond bucket_size
-            # to enable token acquisition (which requires at least 1.0 tokens).
-            # However, we still respect the rate limit by capping at a reasonable maximum.
-            if self.bucket_size < 1.0:
-                # Allow accumulation up to at least 1.0, but cap at 2.0 to prevent excessive buildup
-                max_tokens = max(1.0, min(2.0, self.bucket_size * 2))
-                self.tokens = min(max_tokens, new_tokens)
-            else:
-                # For bucket sizes >= 1.0, use the original behavior
-                self.tokens = min(self.bucket_size, new_tokens)
-
+            self.tokens = min(self._max_tokens(), self.tokens + tokens_to_add)
             self.last_refill = now
+
+    def _refund_token(self) -> None:
+        """Return a previously consumed token to the bucket, without exceeding its capacity."""
+        with self.lock:
+            self._refill_tokens()
+            self.tokens = min(self._max_tokens(), self.tokens + 1)
 
     def acquire(self, timeout: Optional[float] = None) -> bool:
         """
@@ -274,8 +290,9 @@ class RateLimiter:
         return self
 
     def __exit__(self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Optional[object]) -> None:
-        """Context manager exit - nothing to do."""
-        pass
+        """Context manager exit - refund the token if the body raised and refund_on_error is enabled."""
+        if exc_type is not None and self._refund_on_error:
+            self._refund_token()
 
     @property
     def call_count(self) -> int:
@@ -470,8 +487,9 @@ class RateLimiter:
     async def __aexit__(
         self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Optional[object]
     ) -> None:
-        """Async context manager exit - nothing to do."""
-        pass
+        """Async context manager exit - refund the token if the body raised and refund_on_error is enabled."""
+        if exc_type is not None and self._refund_on_error:
+            await _to_thread(self._refund_token)
 
     def __repr__(self) -> str:
         """Return string representation of the rate limiter."""

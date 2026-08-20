@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Opt-in `refund_on_error` constructor parameter that returns the token to the bucket when a sync or async context manager body raises
+
+### Documentation
+- Documented that, by default, a token consumed on context manager entry is not refunded when the body raises
+
 ## [0.3.4] - 2025-11-07
 
 ### Added
