@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- `initial_tokens` validation error now uses user-facing wording ("cannot exceed the burst capacity of N") instead of exposing the internal `bucket_size` field name
+
 ## [0.3.4] - 2025-11-07
 
 ### Added
