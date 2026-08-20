@@ -111,6 +111,7 @@ See examples for tracking and efficiency calculations.
 - **`initial_tokens`**: Initial number of tokens in the bucket (defaults to `limit` for full bucket)
 - **`track_calls`**: Enable call tracking (default: False)
 - **`history_window_seconds`**: How long to keep call history for windowed queries (default: 3600)
+- **`refund_on_error`**: Return the token to the bucket when a context manager body raises (default: False)
 
 The `initial_tokens` parameter allows you to control the initial burst behaviour:
 - `None` (default): Start with a full bucket (backward compatible)
@@ -221,6 +222,21 @@ async with limiter:
     # This block will only execute after acquiring a token
     await make_async_api_call()
 ```
+
+**Exceptions inside the block:**
+
+A token is consumed on entry and, by default, is *not* returned if the block raises. This is standard token bucket behaviour: the attempt has already been made, so it counts towards the rate limit.
+
+If you would rather that failed attempts do not count, opt in with `refund_on_error=True`:
+
+```python
+limiter = RateLimiter(limit=120, period=timedelta(minutes=1), refund_on_error=True)
+
+with limiter:
+    make_api_call()  # if this raises, the token is returned to the bucket
+```
+
+Refunds never take the bucket above its capacity, and when `track_calls=True` the attempt is still recorded in the call statistics.
 
 ### CallStats
 
