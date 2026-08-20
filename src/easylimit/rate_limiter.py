@@ -162,7 +162,9 @@ class RateLimiter:
             self.bucket_size = 1.0
         else:
             # period provided without limit
-            raise ValueError("Must specify limit when providing period, or use max_calls_per_second")
+            raise ValueError(
+                "Must specify limit when providing period, e.g. RateLimiter(limit=120, period=timedelta(minutes=1))"
+            )
 
         if initial_tokens is not None:
             if not isinstance(initial_tokens, (int, float)):
