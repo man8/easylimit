@@ -232,7 +232,7 @@ class TestInitialTokensBackwardCompatibility:
         assert limiter3.available_tokens() == 1.0
 
     def test_repr_includes_initial_state(self):
-        """Test that repr shows the current state correctly."""
+        """Test that repr reflects the configured limit regardless of initial_tokens."""
         limiter = RateLimiter(limit=5, initial_tokens=2)
         repr_str = repr(limiter)
-        assert "bucket_size=5.0" in repr_str
+        assert repr_str == "RateLimiter(limit=5)"
