@@ -61,8 +61,12 @@ class TestPeriodBasedAPI:
         assert limiter.max_calls_per_second == 10.0
         assert limiter.bucket_size == 10.0
 
-        with pytest.raises(ValueError, match="Must specify limit when providing period"):
+        with pytest.raises(ValueError, match="Must specify limit when providing period") as excinfo:
             RateLimiter(period=timedelta(seconds=10))
+
+        # The match prefix above does not discriminate a message that also names the
+        # deprecated parameter, so assert its absence separately.
+        assert "max_calls_per_second" not in str(excinfo.value)
 
     def test_backward_compatibility(self) -> None:
         """Test that existing max_calls_per_second API still works."""
