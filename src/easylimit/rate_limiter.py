@@ -128,8 +128,9 @@ class RateLimiter:
             ValueError: If parameters are invalid or conflicting
 
         Note:
-            Use either max_calls_per_second OR both limit and period.
-            The period-based approach is recommended for clarity and precision.
+            Use limit, optionally with period (which defaults to 1 second); period
+            without limit is an error. The legacy max_calls_per_second parameter is
+            deprecated and cannot be combined with limit or period.
         """
         if max_calls_per_second is not None:
             if limit is not None or period is not None:

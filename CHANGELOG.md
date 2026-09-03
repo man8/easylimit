@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - `initial_tokens` validation error now uses user-facing wording ("cannot exceed the burst capacity of N") instead of exposing the internal `bucket_size` field name
 - Error message for `RateLimiter(period=...)` without `limit` now points at `limit` with a usage example instead of suggesting the deprecated `max_calls_per_second` parameter
+- `RateLimiter.__init__` docstring now leads with `limit`/`period` and marks `max_calls_per_second` as deprecated, instead of presenting the deprecated parameter as an equal alternative and implying `period` is required alongside `limit`
 
 ### Fixed
 - `__repr__` now reflects the parameters the `RateLimiter` was actually constructed with (`limit`/`period`, legacy `max_calls_per_second`, or `RateLimiter.unlimited()`) instead of always showing the derived per-second rate and bucket size, which conflated per-period limits with per-second rates
