@@ -248,7 +248,7 @@ class CallStats:
 
 `easylimit` uses a **token bucket algorithm** to provide precise rate limiting:
 
-1. **Token Bucket**: A bucket holds tokens, with a maximum capacity equal to `max_calls_per_second`
+1. **Token Bucket**: A bucket holds up to `limit` tokens (the calls allowed per period) — except for a fractional `limit` below 1, where tokens accumulate past it, far enough that a whole call can be acquired
 2. **Token Refill**: Tokens are added to the bucket at a constant rate over time
 3. **Token Consumption**: Each operation consumes one token from the bucket
 4. **Rate Limiting**: When the bucket is empty, operations must wait for new tokens
