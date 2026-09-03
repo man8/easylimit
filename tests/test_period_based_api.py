@@ -98,8 +98,7 @@ class TestPeriodBasedAPI:
         limiter = RateLimiter(limit=100, period=timedelta(minutes=1))
 
         repr_str = repr(limiter)
-        assert "max_calls_per_second=" in repr_str
-        assert "bucket_size=100.0" in repr_str
+        assert repr_str == f"RateLimiter(limit=100, period={timedelta(minutes=1)!r})"
 
     def test_timedelta_various_units(self) -> None:
         """Test timedelta with various time units."""
