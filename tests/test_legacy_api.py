@@ -21,6 +21,12 @@ def test_basic_initialisation_legacy(monkeypatch: pytest.MonkeyPatch) -> None:
     assert limiter.available_tokens() == 2.0
 
 
+def test_repr_legacy(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("EASYLIMIT_SUPPRESS_DEPRECATIONS", "1")
+    limiter = RateLimiter(max_calls_per_second=2.0)
+    assert repr(limiter) == "RateLimiter(max_calls_per_second=2.0)"
+
+
 def test_acquire_and_try_acquire_legacy(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("EASYLIMIT_SUPPRESS_DEPRECATIONS", "1")
     limiter = RateLimiter(max_calls_per_second=2)

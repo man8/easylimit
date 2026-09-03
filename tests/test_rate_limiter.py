@@ -32,9 +32,22 @@ class TestRateLimiterBasic:
     def test_repr(self) -> None:
         """Test string representation."""
         limiter = RateLimiter(limit=100)
-        repr_str = repr(limiter)
-        assert "max_calls_per_second=" in repr_str
-        assert "bucket_size=100.0" in repr_str
+        assert repr(limiter) == "RateLimiter(limit=100)"
+
+    def test_repr_period_based(self) -> None:
+        """Test string representation reflects the configured limit and period."""
+        limiter = RateLimiter(limit=120, period=timedelta(minutes=1))
+        assert repr(limiter) == f"RateLimiter(limit=120, period={timedelta(minutes=1)!r})"
+
+    def test_repr_default(self) -> None:
+        """Test string representation when no arguments are provided."""
+        limiter = RateLimiter()
+        assert repr(limiter) == "RateLimiter()"
+
+    def test_repr_unlimited(self) -> None:
+        """Test string representation of an unlimited rate limiter."""
+        limiter = RateLimiter.unlimited()
+        assert repr(limiter) == "RateLimiter.unlimited()"
 
 
 class TestRateLimiterAcquisition:

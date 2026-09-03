@@ -147,6 +147,7 @@ class RateLimiter:
 
             self.max_calls_per_second = max_calls_per_second
             self.bucket_size = max_calls_per_second
+            self._repr_str = f"RateLimiter(max_calls_per_second={max_calls_per_second!r})"
         elif limit is not None:
             # Default period to 1 second if not provided. Do not treat zero-duration as falsy here.
             effective_period = period if period is not None else timedelta(seconds=1)
@@ -157,9 +158,14 @@ class RateLimiter:
 
             self.max_calls_per_second = limit / effective_period.total_seconds()
             self.bucket_size = float(limit)
+            if period is not None:
+                self._repr_str = f"RateLimiter(limit={limit!r}, period={period!r})"
+            else:
+                self._repr_str = f"RateLimiter(limit={limit!r})"
         elif max_calls_per_second is None and limit is None and period is None:
             self.max_calls_per_second = 1.0
             self.bucket_size = 1.0
+            self._repr_str = "RateLimiter()"
         else:
             # period provided without limit
             raise ValueError(
@@ -396,6 +402,7 @@ class RateLimiter:
         limiter.max_calls_per_second = float("inf")
         limiter.bucket_size = float("inf")
         limiter.tokens = float("inf")
+        limiter._repr_str = "RateLimiter.unlimited()"
         return limiter
 
     def _try_consume_one_token_sync(self, start_time: float, timeout: Optional[float]) -> Tuple[bool, float, bool]:
@@ -478,5 +485,5 @@ class RateLimiter:
         pass
 
     def __repr__(self) -> str:
-        """Return string representation of the rate limiter."""
-        return f"RateLimiter(max_calls_per_second={self.max_calls_per_second}, bucket_size={self.bucket_size})"
+        """Return string representation reflecting how the rate limiter was constructed."""
+        return self._repr_str
