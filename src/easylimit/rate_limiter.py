@@ -128,8 +128,10 @@ class RateLimiter:
             ValueError: If parameters are invalid or conflicting
 
         Note:
-            Use either max_calls_per_second OR both limit and period.
-            The period-based approach is recommended for clarity and precision.
+            Use limit, optionally with period (which defaults to 1 second); period
+            without limit is an error. Omitting all three defaults to 1 call per
+            second. The legacy max_calls_per_second parameter is deprecated and
+            cannot be combined with limit or period.
         """
         if max_calls_per_second is not None:
             if limit is not None or period is not None:
@@ -140,7 +142,7 @@ class RateLimiter:
             if os.getenv("EASYLIMIT_SUPPRESS_DEPRECATIONS", "").lower() not in {"1", "true", "yes"}:
                 warnings.warn(
                     "The 'max_calls_per_second' parameter is deprecated. "
-                    "Use 'limit' and 'period' instead for better clarity and precision.",
+                    "Use 'limit' (optionally with 'period') instead.",
                     DeprecationWarning,
                     stacklevel=2,
                 )
