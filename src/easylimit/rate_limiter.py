@@ -170,7 +170,9 @@ class RateLimiter:
             if initial_tokens < 0:
                 raise ValueError("initial_tokens must be non-negative")
             if initial_tokens > self.bucket_size:
-                raise ValueError(f"initial_tokens ({initial_tokens}) cannot exceed bucket_size ({self.bucket_size})")
+                raise ValueError(
+                    f"initial_tokens ({initial_tokens}) cannot exceed the burst capacity of {self.bucket_size}"
+                )
 
         self.tokens = initial_tokens if initial_tokens is not None else self.bucket_size
         self.last_refill = time.time()

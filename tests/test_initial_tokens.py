@@ -63,7 +63,7 @@ class TestInitialTokensValidation:
 
     def test_initial_tokens_exceeds_bucket_size_raises_error(self):
         """Test that initial_tokens > bucket_size raises ValueError."""
-        with pytest.raises(ValueError, match="initial_tokens \\(10\\) cannot exceed bucket_size \\(5.0\\)"):
+        with pytest.raises(ValueError, match="initial_tokens \\(10\\) cannot exceed the burst capacity of 5.0"):
             RateLimiter(limit=5, initial_tokens=10)
 
     def test_initial_tokens_non_numeric_raises_error(self):
@@ -86,7 +86,7 @@ class TestInitialTokensValidation:
         limiter = RateLimiter(limit=0.5, initial_tokens=0.3)
         assert abs(limiter.available_tokens() - 0.3) < 0.1
 
-        with pytest.raises(ValueError, match="initial_tokens \\(0.8\\) cannot exceed bucket_size \\(0.5\\)"):
+        with pytest.raises(ValueError, match="initial_tokens \\(0.8\\) cannot exceed the burst capacity of 0.5"):
             RateLimiter(limit=0.5, initial_tokens=0.8)
 
 
