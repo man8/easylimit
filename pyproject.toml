@@ -27,7 +27,7 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP",
 ]
 keywords = ["rate-limiting", "throttling", "api", "context-manager", "token-bucket"]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = []
 
 [project.urls]
@@ -37,7 +37,7 @@ Issues = "https://github.com/man8/easylimit/issues"
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0.0",
+    "pytest>=9.0.3",
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.0.0",
     "ruff>=0.1.0",
@@ -118,5 +118,5 @@ disallow_untyped_defs = false
 
 [dependency-groups]
 dev = [
-    "pytest>=8.3.5",
+    "pytest>=9.0.3",
 ]
