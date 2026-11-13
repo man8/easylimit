@@ -33,7 +33,7 @@ uv run pytest  # or specific test command
 
 **Test Configuration:**
 - OS: [e.g., macOS 14.0, Ubuntu 22.04]
-- Python version(s): [e.g., 3.8, 3.11, 3.13]
+- Python version(s): [e.g., 3.10, 3.11, 3.13]
 - easylimit version: [e.g., 0.3.2 + changes]
 
 ## Checklist

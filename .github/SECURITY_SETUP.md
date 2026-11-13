@@ -64,8 +64,6 @@ Navigate to: `Settings` → `Branches` → `Add rule`
 ### Current Configuration (Standard for Solo-Maintained Projects):
 - ✅ Require status checks to pass before merging
   - Required checks:
-    - `test (3.8)`
-    - `test (3.9)`
     - `test (3.10)`
     - `test (3.11)`
     - `test (3.12)`

@@ -7,29 +7,21 @@ given period.
 """
 
 import asyncio
-import functools
 import os
 import threading
 import time
 import warnings
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Callable, List, Optional, Tuple, TypeVar, overload
+from typing import Any, TypeVar, overload
 
 T = TypeVar("T")
 
 
 async def _to_thread(func: Callable[..., T], /, *args: Any) -> T:
-    """
-    Run a callable in a thread and await the result.
-
-    Uses asyncio.to_thread when available (Python 3.9+), otherwise falls back
-    to run_in_executor for Python 3.8 compatibility.
-    """
-    if hasattr(asyncio, "to_thread"):
-        return await asyncio.to_thread(func, *args)
-    loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(None, functools.partial(func, *args))
+    """Run a callable in a thread and await the result."""
+    return await asyncio.to_thread(func, *args)
 
 
 @dataclass
@@ -43,7 +35,7 @@ class CallStats:
     calls_per_second_average: float
     efficiency_percentage: float
     tracking_start_time: datetime
-    last_call_time: Optional[datetime]
+    last_call_time: datetime | None
 
 
 class RateLimiter:
@@ -68,7 +60,7 @@ class RateLimiter:
         max_calls_per_second: float,
         track_calls: bool = False,
         history_window_seconds: int = 3600,
-        initial_tokens: Optional[float] = None,
+        initial_tokens: float | None = None,
     ) -> None:
         """Deprecated: Use limit and period instead."""
         ...
@@ -81,7 +73,7 @@ class RateLimiter:
         period: timedelta,
         track_calls: bool = False,
         history_window_seconds: int = 3600,
-        initial_tokens: Optional[float] = None,
+        initial_tokens: float | None = None,
     ) -> None: ...
 
     @overload
@@ -91,7 +83,7 @@ class RateLimiter:
         limit: float,
         track_calls: bool = False,
         history_window_seconds: int = 3600,
-        initial_tokens: Optional[float] = None,
+        initial_tokens: float | None = None,
     ) -> None: ...
 
     @overload
@@ -100,18 +92,18 @@ class RateLimiter:
         *,
         track_calls: bool = False,
         history_window_seconds: int = 3600,
-        initial_tokens: Optional[float] = None,
+        initial_tokens: float | None = None,
     ) -> None: ...
 
     def __init__(
         self,
         *,
-        max_calls_per_second: Optional[float] = None,
-        limit: Optional[float] = None,
-        period: Optional[timedelta] = None,
+        max_calls_per_second: float | None = None,
+        limit: float | None = None,
+        period: timedelta | None = None,
         track_calls: bool = False,
         history_window_seconds: int = 3600,
-        initial_tokens: Optional[float] = None,
+        initial_tokens: float | None = None,
     ) -> None:
         """
         Initialise the rate limiter.
@@ -175,7 +167,7 @@ class RateLimiter:
             )
 
         if initial_tokens is not None:
-            if not isinstance(initial_tokens, (int, float)):
+            if not isinstance(initial_tokens, int | float):
                 raise ValueError("initial_tokens must be a number")
             if initial_tokens < 0:
                 raise ValueError("initial_tokens must be non-negative")
@@ -190,10 +182,10 @@ class RateLimiter:
         self._track_calls = track_calls
         self._history_window = history_window_seconds
         self._call_count = 0
-        self._timestamps: List[float] = []
-        self._delays: List[float] = []
+        self._timestamps: list[float] = []
+        self._delays: list[float] = []
         self._start_time = datetime.now() if track_calls else None
-        self._last_call_time: Optional[datetime] = None
+        self._last_call_time: datetime | None = None
         self.lock = threading.RLock()
 
     def _refill_tokens(self) -> None:
@@ -217,7 +209,7 @@ class RateLimiter:
 
             self.last_refill = now
 
-    def acquire(self, timeout: Optional[float] = None) -> bool:
+    def acquire(self, timeout: float | None = None) -> bool:
         """
         Acquire a token, blocking if necessary.
 
@@ -285,7 +277,7 @@ class RateLimiter:
         self.acquire()
         return self
 
-    def __exit__(self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Optional[object]) -> None:
+    def __exit__(self, exc_type: type | None, exc_val: Exception | None, exc_tb: object | None) -> None:
         """Context manager exit - nothing to do."""
         pass
 
@@ -407,7 +399,7 @@ class RateLimiter:
         limiter._repr_str = "RateLimiter.unlimited()"
         return limiter
 
-    def _try_consume_one_token_sync(self, start_time: float, timeout: Optional[float]) -> Tuple[bool, float, bool]:
+    def _try_consume_one_token_sync(self, start_time: float, timeout: float | None) -> tuple[bool, float, bool]:
         """Try to consume a token under the sync lock; return (acquired, sleep_time, timed_out)."""
         with self.lock:
             self._refill_tokens()
@@ -447,7 +439,7 @@ class RateLimiter:
         cutoff_time = now_ts - self._history_window
         self._timestamps = [ts for ts in self._timestamps if ts >= cutoff_time]
 
-    async def async_acquire(self, timeout: Optional[float] = None) -> bool:
+    async def async_acquire(self, timeout: float | None = None) -> bool:
         """
         Async version of acquire that doesn't block the event loop.
 
@@ -480,9 +472,7 @@ class RateLimiter:
         await self.async_acquire()
         return self
 
-    async def __aexit__(
-        self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Optional[object]
-    ) -> None:
+    async def __aexit__(self, exc_type: type | None, exc_val: Exception | None, exc_tb: object | None) -> None:
         """Async context manager exit - nothing to do."""
         pass
 

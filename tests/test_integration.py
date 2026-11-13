@@ -3,7 +3,6 @@ Tests demonstrating real-world usage scenarios and performance characteristics o
 """
 
 import time
-from typing import Dict, Tuple
 from unittest.mock import Mock, patch
 
 from easylimit import RateLimiter
@@ -49,7 +48,7 @@ class TestRealWorldUsage:
 
         limiter = RateLimiter(limit=2)
 
-        def make_api_request(endpoint: str) -> Tuple[int, Dict]:
+        def make_api_request(endpoint: str) -> tuple[int, dict]:
             """Make a rate-limited API request."""
             import requests
 
