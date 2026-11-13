@@ -126,7 +126,7 @@ uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv ru
 - Release locks during sleeps to prevent deadlocks
 
 ### Backwards Compatibility
-- Maintain compatibility with Python 3.8+
+- Maintain compatibility with Python 3.10+
 - Don't break existing API without deprecation cycle
 - Use `@overload` for type-safe API variants
 - Add `DeprecationWarning` for deprecated features
@@ -181,15 +181,15 @@ Follow [Semantic Versioning](https://semver.org/):
 
 ## Testing on Multiple Python Versions
 
-CI tests on Python 3.8-3.13. If you want to test locally:
+CI tests on Python 3.10-3.13. If you want to test locally:
 
 ```bash
 # Using pyenv to test multiple versions
-pyenv install 3.8.18 3.9.18 3.10.13 3.11.9 3.12.7 3.13.2
-pyenv local 3.8.18 3.9.18 3.10.13 3.11.9 3.12.7 3.13.2
+pyenv install 3.10.13 3.11.9 3.12.7 3.13.2
+pyenv local 3.10.13 3.11.9 3.12.7 3.13.2
 
 # Run tests on each version
-for version in 3.8 3.9 3.10 3.11 3.12 3.13; do
+for version in 3.10 3.11 3.12 3.13; do
   echo "Testing Python $version"
   uv run --python $version pytest
 done

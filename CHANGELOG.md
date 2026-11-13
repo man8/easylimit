@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `RateLimiter.__init__` docstring and the `max_calls_per_second` deprecation warning now present `limit`/`period` as the primary form, instead of presenting the deprecated parameter as an equal alternative and implying `period` is required alongside `limit`
 - README token bucket description now gives the bucket capacity as `limit`, which was previously stated as `max_calls_per_second` — correct only for the deprecated per-second form, and wrong by a factor of the period length for the recommended one
 
+### Removed
+- **Breaking:** support for Python 3.8 and 3.9, both past end of life. easylimit now requires Python 3.10 or later (`requires-python = ">=3.10"`), and CI tests 3.10 to 3.13. 0.3.4 is the last release to support 3.8 and 3.9
+
 ### Fixed
 - `__repr__` now reflects the parameters the `RateLimiter` was actually constructed with (`limit`/`period`, legacy `max_calls_per_second`, or `RateLimiter.unlimited()`) instead of always showing the derived per-second rate and bucket size, which conflated per-period limits with per-second rates
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-easylimit is a lightweight Python rate limiter library using a token bucket algorithm with context manager support. It has zero runtime dependencies and supports both synchronous and asynchronous usage patterns. Python 3.8-3.13 compatible.
+easylimit is a lightweight Python rate limiter library using a token bucket algorithm with context manager support. It has zero runtime dependencies and supports both synchronous and asynchronous usage patterns. Python 3.10-3.13 compatible.
 
 ## Development Environment
 
@@ -100,7 +100,7 @@ Key implementation details:
 **Threading Model:**
 - Uses `threading.RLock()` to protect all state access
 - Async methods delegate state mutations to background threads via `_to_thread()` helper
-- `_to_thread()` uses `asyncio.to_thread()` on Python 3.9+, falls back to `run_in_executor()` on 3.8
+- `_to_thread()` wraps `asyncio.to_thread()`
 - Lock is released during sleeps to prevent thread starvation
 - Fully thread-safe for mixed sync/async usage in same program
 
@@ -157,7 +157,7 @@ Access via: `call_count`, `stats`, `calls_in_window(seconds)`, `get_efficiency(w
 - Tests live in `tests/` directory
 - Use pytest markers: `@pytest.mark.legacy`, `@pytest.mark.asyncio`
 - Class-based organization: `class Test*` groups related tests
-- CI runs tests on Python 3.8-3.13
+- CI runs tests on Python 3.10-3.13
 
 ## Key Development Patterns
 
@@ -168,7 +168,7 @@ Access via: `call_count`, `stats`, `calls_in_window(seconds)`, `get_efficiency(w
 
 ### Backwards Compatibility
 - Use `@overload` decorators for type-safe API variants
-- All new features must maintain compatibility with Python 3.8+
+- All new features must maintain compatibility with Python 3.10+
 - CI runs full test suite on all supported Python versions
 
 ### Float Limit Support
@@ -215,7 +215,7 @@ Access via: `call_count`, `stats`, `calls_in_window(seconds)`, `get_efficiency(w
 - `test_examples.py`: Smoke tests of example scripts
 
 ### CI/CD Pipeline
-- **Test job:** Runs on Python 3.8-3.13 (lint, type check, all tests)
+- **Test job:** Runs on Python 3.10-3.13 (lint, type check, all tests)
 
 ## Community & Contribution
 

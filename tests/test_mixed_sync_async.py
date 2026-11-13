@@ -10,7 +10,6 @@ import asyncio
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-from typing import List
 
 import pytest
 
@@ -27,7 +26,7 @@ class TestMixedSyncAsyncComprehensive:
         limiter = RateLimiter(limit=5, initial_tokens=0, track_calls=True)
         start_time = time.time()
 
-        def sync_worker(worker_id: int, num_calls: int) -> List[float]:
+        def sync_worker(worker_id: int, num_calls: int) -> list[float]:
             times = []
             for _ in range(num_calls):
                 with limiter:

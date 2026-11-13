@@ -6,7 +6,7 @@ This document describes how to release a new version of easylimit to PyPI.
 
 Releases are **fully automated** using GitHub Actions with PyPI Trusted Publishing. When you push a version tag, GitHub Actions will:
 
-1. Run all tests on Python 3.8-3.13
+1. Run all tests on Python 3.10-3.13
 2. Build the package
 3. Publish to PyPI (no token needed - uses Trusted Publishing)
 4. Create a GitHub Release with changelog
