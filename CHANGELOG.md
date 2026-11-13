@@ -65,13 +65,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Python 3.13 classifier added to package metadata
 - Dynamic versioning configured (single source in __init__.py)
 
-## [0.3.2] - 2025-10-14
+## 0.3.2 - 2025-10-14
 
 ### Fixed
 - Fixed call tracking bug in `async_acquire()` method where the call count was not being incremented when `track_calls=True`
 - Direct `async_acquire()` calls are now properly tracked (context manager usage was already working correctly)
 
-## [0.3.1] - 2025-09-08
+## 0.3.1 - 2025-09-08
 
 ### Added
 - `limit` parameter now supports float values for precise fractional rates (e.g., `RateLimiter(limit=0.4)` for 0.4 requests/second)
@@ -88,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Thread-safe mixed sync/async usage with unified locking
 - Async methods delegate state mutations to background threads via `_to_thread()` helper
 
-## [0.3.0] - 2025-08-10
+## 0.3.0 - 2025-08-10
 
 ### Added
 - Period-based API using `limit` and `period` parameters (recommended approach)
@@ -108,7 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - Transitional `per_second` classmethod
 
-## [0.2.0] - 2025-06-03
+## 0.2.0 - 2025-06-03
 
 ### Added
 - Initial public release
@@ -130,8 +130,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MIT License
 - PyPI distribution
 
-[Unreleased]: https://github.com/man8/easylimit/compare/v0.3.2...HEAD
-[0.3.2]: https://github.com/man8/easylimit/releases/tag/v0.3.2
-[0.3.1]: https://github.com/man8/easylimit/releases/tag/v0.3.1
-[0.3.0]: https://github.com/man8/easylimit/releases/tag/v0.3.0
-[0.2.0]: https://github.com/man8/easylimit/releases/tag/v0.2.0
+[Unreleased]: https://github.com/man8/easylimit/compare/v0.3.4...HEAD
