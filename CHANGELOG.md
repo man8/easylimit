@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-13
+
 ### Changed
 - `initial_tokens` validation error now uses user-facing wording ("cannot exceed the burst capacity of N") instead of exposing the internal `bucket_size` field name
 - Error message for `RateLimiter(period=...)` without `limit` now points at `limit` with a usage example instead of suggesting the deprecated `max_calls_per_second` parameter
@@ -130,4 +132,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MIT License
 - PyPI distribution
 
-[Unreleased]: https://github.com/man8/easylimit/compare/v0.3.4...HEAD
+[Unreleased]: https://github.com/man8/easylimit/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/man8/easylimit/compare/v0.3.4...v0.4.0
+[0.3.4]: https://github.com/man8/easylimit/compare/v0.3.3...v0.3.4
+[0.3.3]: https://github.com/man8/easylimit/releases/tag/v0.3.3
