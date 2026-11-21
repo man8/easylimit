@@ -11,6 +11,7 @@ import os
 import threading
 import time
 import warnings
+from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -182,8 +183,10 @@ class RateLimiter:
         self._track_calls = track_calls
         self._history_window = history_window_seconds
         self._call_count = 0
-        self._timestamps: list[float] = []
-        self._delays: list[float] = []
+        self._timestamps: deque[float] = deque()
+        # Running aggregates replace a per-call delay list so memory stays constant.
+        self._total_delay = 0.0
+        self._max_delay = 0.0
         self._start_time = datetime.now() if track_calls else None
         self._last_call_time: datetime | None = None
         self.lock = threading.RLock()
@@ -308,9 +311,9 @@ class RateLimiter:
                     last_call_time=None,
                 )
 
-            total_delay = sum(self._delays)
-            avg_delay = total_delay / len(self._delays) if self._delays else 0.0
-            max_delay = max(self._delays) if self._delays else 0.0
+            total_delay = self._total_delay
+            avg_delay = total_delay / self._call_count
+            max_delay = self._max_delay
 
             elapsed_time = (datetime.now() - (self._start_time or datetime.now())).total_seconds()
             calls_per_second = self._call_count / elapsed_time if elapsed_time > 0 else 0.0
@@ -337,7 +340,8 @@ class RateLimiter:
         with self.lock:
             self._call_count = 0
             self._timestamps.clear()
-            self._delays.clear()
+            self._total_delay = 0.0
+            self._max_delay = 0.0
             self._start_time = datetime.now()
             self._last_call_time = None
 
@@ -434,10 +438,14 @@ class RateLimiter:
         self._call_count += 1
         now_ts = time.time()
         self._timestamps.append(now_ts)
-        self._delays.append(delay)
+        self._total_delay += delay
+        if delay > self._max_delay:
+            self._max_delay = delay
         self._last_call_time = datetime.now()
         cutoff_time = now_ts - self._history_window
-        self._timestamps = [ts for ts in self._timestamps if ts >= cutoff_time]
+        # Timestamps are appended in order, so expired entries are at the left.
+        while self._timestamps and self._timestamps[0] < cutoff_time:
+            self._timestamps.popleft()
 
     async def async_acquire(self, timeout: float | None = None) -> bool:
         """
